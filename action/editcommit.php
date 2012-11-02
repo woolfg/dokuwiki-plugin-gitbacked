@@ -51,6 +51,11 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
 			
 			//init the repo and create a new one if it is not present
 			$repo = new GitRepo($repoPath, true, true);
+
+			$params = $this->getConf('addParams');
+			if ($params) {
+				$repo->git_path .= ' '.$params;
+			}
 			
 			//add the changed file and set the commit message
 			$repo->add($pagePath);

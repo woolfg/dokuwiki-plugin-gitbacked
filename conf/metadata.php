@@ -8,4 +8,5 @@
 $meta['pushAfterCommit'] = array('onoff');
 $meta['commitMsg'] = array('string');
 $meta['repoPath'] = array('string');
+$meta['addParams'] = array('string');
 

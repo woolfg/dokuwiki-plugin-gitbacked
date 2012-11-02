@@ -8,3 +8,4 @@
 $conf['pushAfterCommit'] = 0;
 $conf['commitMsg']	= '%page% changed with %summary% by %user%';
 $conf['repoPath']	= $GLOBALS['conf']['savedir'];
+$conf['addParams'] = '';
