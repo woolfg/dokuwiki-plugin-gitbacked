@@ -200,6 +200,7 @@ class GitRepo {
 	 * @return  string
 	 */
 	protected function run_command($command) {
+
 		$descriptorspec = array(
 			1 => array('pipe', 'w'),
 			2 => array('pipe', 'w'),

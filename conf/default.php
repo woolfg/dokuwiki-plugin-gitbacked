@@ -6,6 +6,9 @@
  */
 
 $conf['pushAfterCommit'] = 0;
-$conf['commitMsg']	= '%page% changed with %summary% by %user%';
+$conf['commitPageMsg']	= '%page% changed with %summary% by %user%';
+$conf['commitPageMsgDel']	= '%page% deleted %summary% by %user%';
+$conf['commitMediaMsg']	= '%media% uploaded by %user%';
+$conf['commitMediaMsgDel']	= '%media% deleted by %user%';
 $conf['repoPath']	= $GLOBALS['conf']['savedir'];
 $conf['addParams'] = '';
