@@ -101,7 +101,7 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
 			//empty content indicates a page deletion
 			if ($pageContent == '') {
 				//get the commit text for deletions
-				$msgTemplate = $this->getConf('commitPageMsgDel')
+				$msgTemplate = $this->getConf('commitPageMsgDel');
 
 				// bad hack as DokuWiki deletes the file after this event
 				// thus, let's delete the file by ourselves, so git can recognize the deletion
@@ -110,7 +110,7 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
 
 			} else {
 				//get the commit text for edits
-				$msgTemplate = $this->getConf('commitPageMsg')
+				$msgTemplate = $this->getConf('commitPageMsg');
 			}
 
 			$message = str_replace(
