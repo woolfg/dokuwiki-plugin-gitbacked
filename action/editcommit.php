@@ -95,12 +95,13 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
 			$pageName = $event->data[2];
 			$pageContent = $event->data[0][1];
 
-			$editSummary = $GLOBALS['INFO']['meta']['last_change']['sum'];
-			
+			// get the summary directly from the form input
+			// as the metadata hasn't updated yer
+			$editSummary = $GLOBALS['INPUT']->str('summary');		
 
-			//empty content indicates a page deletion
+			// empty content indicates a page deletion
 			if ($pageContent == '') {
-				//get the commit text for deletions
+				// get the commit text for deletions
 				$msgTemplate = $this->getConf('commitPageMsgDel');
 
 				// bad hack as DokuWiki deletes the file after this event
