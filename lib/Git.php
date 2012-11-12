@@ -448,6 +448,20 @@ class GitRepo {
     {
         return $this->run("push --tags $remote $branch");
     }
+
+    /**
+     * Pull specific branch from remote
+     *
+     * Accepts the name of the remote and local branch
+     *
+     * @param string $remote
+     * @param string $branch
+     * @return string
+     */
+    public function pull($remote, $branch)
+    {
+        return $this->run("pull $remote $branch");
+    }
     
     /**
      * Sets the project description.

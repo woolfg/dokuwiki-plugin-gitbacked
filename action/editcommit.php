@@ -23,10 +23,36 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
 		$controller->register_hook('IO_WIKIPAGE_WRITE', 'AFTER', $this, 'handle_io_wikipage_write');
 		$controller->register_hook('MEDIA_UPLOAD_FINISH', 'AFTER', $this, 'handle_media_upload');
 		$controller->register_hook('MEDIA_DELETE_FILE', 'AFTER', $this, 'handle_media_deletion');
+		$controller->register_hook('DOKUWIKI_DONE', 'AFTER', $this, 'handle_periodic_pull');
     }
 
-	private function commitFile($filePath,$message) {
+	public function handle_periodic_pull(Doku_Event &$event, $param) {
+		if ($this->getConf('periodicPull')) {
+			$lastPullFile = DOKU_PLUGIN.'gitbacked/action/lastpull.txt';
+			//check if the lastPullFile exists
+			if (is_file($lastPullFile)) {
+				$lastPull = unserialize(file_get_contents($lastPullFile));
+			} else {
+				$lastPull = 0;
+			}
+			//calculate time between pulls in seconds
+			$timeToWait = $this->getConf('periodicMinutes')*60;
+			$now = time();
 
+			//if it is time to run a pull request
+			if ($lastPull+$timeToWait < $now) {
+				$repo = $this->initRepo();
+
+				//execute the pull request
+				$repo->pull('origin',$repo->active_branch());
+
+				//save the current time to the file to track the last pull execution
+				file_put_contents($lastPullFile,serialize(time()));
+			}
+		}
+	}
+
+	private function initRepo() {
 		//get path to the repo root (by default DokuWiki's savedir)
 		$repoPath = DOKU_INC.$this->getConf('repoPath');
 		//init the repo and create a new one if it is not present
@@ -36,6 +62,12 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
 		if ($params) {
 			$repo->git_path .= ' '.$params;
 		}
+		return $repo;
+	}
+
+	private function commitFile($filePath,$message) {
+
+		$repo = $this->initRepo();
 		
 		//add the changed file and set the commit message
 		$repo->add($filePath);

@@ -6,6 +6,8 @@
  */
 
 $meta['pushAfterCommit'] = array('onoff');
+$meta['periodicPull'] = array('onoff');
+$meta['periodicMinutes'] = array('numeric');
 $meta['commitPageMsg'] = array('string');
 $meta['commitPageMsgDel'] = array('string');
 $meta['commitMediaMsg'] = array('string');
