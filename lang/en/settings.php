@@ -14,4 +14,5 @@ $lang['commitPageMsgDel']	= 'Commit message for deleted pages (%user%,%summary%,
 $lang['commitMediaMsg']	= 'Commit message for media files (%user%,%media% are replaced by the corresponding values)';
 $lang['commitMediaMsgDel']	= 'Commit message for deleted media files (%user%,%media% are replaced by the corresponding values)';
 $lang['repoPath']	= 'Path of the git repo (e.g. the savedir '.$GLOBALS['conf']['savedir'].')';
+$lang['repoWorkDir']	= 'Path of the git working tree, must contain "pages" and "media" directories (e.g. the savedir '.$GLOBALS['conf']['savedir'].')';
 $lang['addParams'] = 'Additional git parameters (added to the git execution command)';
