@@ -14,9 +14,15 @@ if (!defined('DOKU_TAB')) define('DOKU_TAB', "\t");
 if (!defined('DOKU_PLUGIN')) define('DOKU_PLUGIN',DOKU_INC.'lib/plugins/');
 
 require_once DOKU_PLUGIN.'action.php';
-require_once(DOKU_PLUGIN.'gitbacked/lib/Git.php');
+require_once dirname(__FILE__).'/../lib/Git.php';
 
 class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
+
+    function __construct() {
+        global $conf;
+        $this->temp_dir = $conf['tmpdir'].'/gitbacked';
+        io_mkdir_p($this->temp_dir);
+    }
 
     public function register(Doku_Event_Handler &$controller) {
 
@@ -28,7 +34,7 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
 
     public function handle_periodic_pull(Doku_Event &$event, $param) {
         if ($this->getConf('periodicPull')) {
-            $lastPullFile = DOKU_PLUGIN.'gitbacked/action/lastpull.txt';
+            $lastPullFile = $this->temp_dir.'/lastpull.txt';
             //check if the lastPullFile exists
             if (is_file($lastPullFile)) {
                 $lastPull = unserialize(file_get_contents($lastPullFile));
