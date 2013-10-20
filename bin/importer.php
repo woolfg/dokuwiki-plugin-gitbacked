@@ -307,13 +307,18 @@ class git_importer {
     }
 
     private function importHistory($repo, $historyfile) {
+        // basic settings
         $base = DOKU_INC.$this->getConf('repoWorkDir');
         $base_cut = strlen($base) - 1;
         $logfile = $this->temp_dir.'/_edit';
 
+        // read history entries line by line and process them
         $hh = fopen($historyfile, "rb");
         while (!feof($hh)) {
             $line = rtrim(fgets($hh), "\r\n");
+            if (!$line) continue;
+
+            // read info from a line
             $logline = explode("\t", $line);
             $id = array_pop($logline);
             $data_type = array_pop($logline);
@@ -321,11 +326,15 @@ class git_importer {
             $type = $logline[2];
             $user = $logline[4];
             $summary = $logline[5];
+
+            // record wiki edit log
             $logline = implode("\t", $logline);
             file_put_contents($logfile, $logline);
             $repo->git('add', array(
                 '' => $logfile
                 ));
+
+            // add data to commit
             switch ($data_type) {
                 case "pages":
                 case "attic":
@@ -333,38 +342,28 @@ class git_importer {
                     $file = $this->temp_dir.'/'.substr( $item, $base_cut );
                     io_mkdir_p(dirname($file));
                     if ($type == 'D') {
-                        $message = str_replace(
-                            array('%page%', '%summary%', '%user%'),
-                            array($id, $summary, $user),
-                            $this->getConf('commitPageMsgDel')
-                        );
                         $repo->git('rm', array(
                             'cached' => null,
                             'ignore-unmatch' => null,
                             '' => $file
                             ));
-                        $repo->git('commit', array(
-                            'allow-empty' => null,
-                            'm' => $message,
-                            'date' => $date
-                            ));
+                        $message = str_replace(
+                            array('%page%', '%summary%', '%user%'),
+                            array($id, $summary, $user),
+                            $this->getConf('commitPageMsgDel')
+                        );
                     }
                     else {
                         $datafile = ($data_type=='pages') ? $item : wikiFN($id, $date, false);
                         file_put_contents($file, io_readFile($datafile, false));
+                        $repo->git('add', array(
+                            '' => $file
+                            ));
                         $message = str_replace(
                             array('%page%', '%summary%', '%user%'),
                             array($id, $summary, $user),
                             $this->getConf('commitPageMsg')
                         );
-                        $repo->git('add', array(
-                            '' => $file
-                            ));
-                        $repo->git('commit', array(
-                            'allow-empty' => null,
-                            'm' => $message,
-                            'date' => $date
-                            ));
                     }
                     break;
                 case "media":
@@ -373,41 +372,40 @@ class git_importer {
                     $file = $this->temp_dir.'/'.substr( $item, $base_cut );
                     io_mkdir_p(dirname($file));
                     if ($type == 'D') {
-                        $message = str_replace(
-                            array('%media%', '%user%'),
-                            array($id, $user),
-                            $this->getConf('commitMediaMsgDel')
-                        );
                         $repo->git('rm', array(
                             'cached' => null,
                             'ignore-unmatch' => null,
                             '' => $file
                             ));
-                        $repo->git('commit', array(
-                            'allow-empty' => null,
-                            'm' => $message,
-                            'date' => $date
-                            ));
+                        $message = str_replace(
+                            array('%media%', '%user%'),
+                            array($id, $user),
+                            $this->getConf('commitMediaMsgDel')
+                        );
                     }
                     else {
                         $datafile = ($data_type=='media') ? $item : mediaFN($id, $date);
                         copy($datafile, $file);
+                        $repo->git('add', array(
+                            '' => $file
+                            ));
                         $message = str_replace(
                             array('%media%', '%user%'),
                             array($id, $user),
                             $this->getConf('commitMediaMsg')
                         );
-                        $repo->git('add', array(
-                            '' => $file
-                            ));
-                        $repo->git('commit', array(
-                            'allow-empty' => null,
-                            'm' => $message,
-                            'date' => $date
-                            ));
                     }
                     break;
             }
+
+            // now commit
+            $commit_message = $message;
+            $commit_date = $date;
+            $repo->git('commit', array(
+                'allow-empty' => null,
+                'm' => $commit_message,
+                'date' => $commit_date
+                ));
         }
         fclose($hh);
     }
