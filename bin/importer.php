@@ -66,16 +66,18 @@ function getSuppliedArgument($OPTS, $short, $long) {
 
 class git_importer {
 
+    function __construct() {
+        global $conf;
+        $this->temp_dir = $conf['tmpdir'].'/gitbacked/importer';
+        io_mkdir_p($this->temp_dir);
+    }
+
     function import() {
         global $conf, $lang;
         print 'start import'.DOKU_LF;
 
-        // defines variables
-        $temp_dir = $conf['tmpdir'].'/gitbacked/importer';
-        io_mkdir_p($temp_dir);
-
         // acquire a lock, or exit
-        $lock = $temp_dir.'/lock';
+        $lock = $this->temp_dir.'/lock';
         if (!@mkdir($lock, $conf['dmode'], true)) {
             print 'another instance of importer is running, exit'.DOKU_LF;
             exit(1);
@@ -83,25 +85,25 @@ class git_importer {
 
         // init git repo
         $repo =& plugin_load('helper', 'gitbacked_git');
-        $repo->setGitRepo($this->git_dir, $temp_dir, $this->git_branch);
+        $repo->setGitRepo($this->git_dir, $this->temp_dir, $this->git_branch);
 
         // collect history
 
         // search and record all page-ids and media-ids
-        $pagelist = $temp_dir.'/pagelist.txt';
+        $pagelist = $this->temp_dir.'/pagelist.txt';
         $this->getPageList($pagelist);
-        $medialist = $temp_dir.'/medialist.txt';
+        $medialist = $this->temp_dir.'/medialist.txt';
         $this->getMediaList($medialist);
 
         // make history list
         // format: <logline> <tab> <data-type> <tab> <data-file>
-        $historylist = $temp_dir.'/historylist.txt';
+        $historylist = $this->temp_dir.'/historylist.txt';
         file_put_contents($historylist, "");
         $this->processPageList($pagelist, $historylist);
         $this->processMediaList($medialist, $historylist);
 
         // sort history list, using shell utility to prevent memory issue
-        $historylisttemp = $temp_dir.'/historylist.txt.tmp';
+        $historylisttemp = $this->temp_dir.'/historylist.txt.tmp';
         rename($historylist, $historylisttemp);
         passthru(sprintf(
             'sort -n %s >%s',
@@ -110,13 +112,13 @@ class git_importer {
         ));
 
         // import from history list
-        $this->importHistory($repo, $historylist, $temp_dir);
+        $this->importHistory($repo, $historylist);
 
         // unlock, clean, and done
         @rmdir($lock);
         passthru(sprintf(
             'rm -rf %s',
-            escapeshellarg($temp_dir)
+            escapeshellarg($this->temp_dir)
         ));
         print 'done.'.DOKU_LF;
     }
@@ -304,10 +306,10 @@ class git_importer {
         fclose($hh);
     }
 
-    private function importHistory($repo, $historyfile, $temp_dir) {
+    private function importHistory($repo, $historyfile) {
         $base = DOKU_INC.$this->getConf('repoWorkDir');
         $base_cut = strlen($base) - 1;
-        $logfile = $temp_dir.'/_edit';
+        $logfile = $this->temp_dir.'/_edit';
 
         $hh = fopen($historyfile, "rb");
         while (!feof($hh)) {
@@ -328,7 +330,7 @@ class git_importer {
                 case "pages":
                 case "attic":
                     $item = wikiFN($id, '', false);
-                    $file = $temp_dir.'/'.substr( $item, $base_cut );
+                    $file = $this->temp_dir.'/'.substr( $item, $base_cut );
                     io_mkdir_p(dirname($file));
                     if ($type == 'D') {
                         $message = str_replace(
@@ -368,7 +370,7 @@ class git_importer {
                 case "media":
                 case "media_attic":
                     $item = mediaFN($id, '');
-                    $file = $temp_dir.'/'.substr( $item, $base_cut );
+                    $file = $this->temp_dir.'/'.substr( $item, $base_cut );
                     io_mkdir_p(dirname($file));
                     if ($type == 'D') {
                         $message = str_replace(
