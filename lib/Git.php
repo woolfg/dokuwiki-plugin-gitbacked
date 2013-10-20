@@ -484,22 +484,4 @@ class GitRepo {
     }
 }
 
-class GitRepox extends GitRepo {
-
-    public function git($command, $params=array()) {
-        $cmd = $this->git_path.' '.$command;
-        foreach ($params as $opt => $value) {
-            if (strlen($opt) == 1) {  // short
-                $cmd .= ' -'.$opt;
-            }
-            else {
-                $cmd .= ' --'.$opt;
-            }
-            if (!is_null($value)) $cmd .= ' '.escapeshellarg($value);
-        }
-        print $cmd."\n";
-        return $this->run_command($cmd);
-    }
-}
-
 /* End Of File */

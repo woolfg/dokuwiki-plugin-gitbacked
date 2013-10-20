@@ -6,7 +6,6 @@ ini_set('memory_limit','128M');
 if(!defined('DOKU_INC')) define('DOKU_INC',realpath(dirname(__FILE__).'/../../../../').'/');
 require_once DOKU_INC.'inc/init.php';
 require_once DOKU_INC.'inc/cliopts.php';
-require_once dirname(__FILE__).'/../lib/Git.php';
 
 // handle options
 $short_opts = 'hr';
@@ -77,14 +76,8 @@ class git_importer {
         }
 
         // init git repo
-        //get path to the repo root (by default DokuWiki's savedir)
-        $repoPath = DOKU_INC.$this->getConf('repoPath');
-        //init the repo and create a new one if it is not present
-        io_mkdir_p($repoPath);
-        $repo = new GitRepox($repoPath, true, true);
-        $repo->git_path .= ' --git-dir '.escapeshellarg($repoPath.'/.git');
-        //set git working directory (by default DokuWiki's savedir)
-        $repo->git_path .= ' --work-tree '.escapeshellarg($temp_dir);
+        $repo =& plugin_load('helper', 'gitbacked');
+        $repo->setGitRepo(null, $temp_dir);
 
         // collect history
         $history = $temp_dir.'/history.txt';
