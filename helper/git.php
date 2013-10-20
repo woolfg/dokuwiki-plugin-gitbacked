@@ -17,8 +17,13 @@ class helper_plugin_gitbacked_git extends DokuWiki_Plugin {
 
     /**
      * Set the repository path for other git-related commands
+     *
+     * @param  string   git repository path, use conf by default (relative to dokuwiki dir)
+     * @param  string   git working tree, use conf by default (relative to dokuwiki dir)
+     * @param  bool     if true, create a git repo if not exist
+     * @param  string   if true, create an .htaccess for the git repo dir if not exist
      */
-    function setGitRepo($repo_path=null, $work_tree=null, $create_new = true) {
+    function setGitRepo($repo_path=null, $work_tree=null, $create_new = true, $protect=true) {
         // set repo path
         $this->repo_path = !empty($repo_path) ? $repo_path : DOKU_INC.$this->getConf('repoPath');
         if (!is_dir($this->repo_path.'/.git')) {
@@ -30,6 +35,15 @@ class helper_plugin_gitbacked_git extends DokuWiki_Plugin {
             }
         }
         $this->repo_path = realpath($this->repo_path);
+
+        // protect the repo from http access
+        // only create if it doesn't exist (modification afterwords is allowed)
+        if ($protect) {
+            $htaccess = $this->repo_path.'/.htaccess';
+            if (!file_exists($htaccess)) {
+                file_put_contents($htaccess, "order allow,deny\ndeny from all\n");
+            }
+        }
 
         // set work tree
         $this->work_tree = !empty($work_tree) ? $work_tree : DOKU_INC.$this->getConf('repoWorkDir');
