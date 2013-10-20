@@ -98,9 +98,10 @@ class git_importer {
         // make history list
         // format: <logline> <tab> <data-type> <tab> <data-file>
         $historylist = $this->temp_dir.'/historylist.txt';
-        file_put_contents($historylist, "");
-        $this->processPageList($pagelist, $historylist);
-        $this->processMediaList($medialist, $historylist);
+        $stream = fopen($historylist, "wb");
+        $this->processPageList($pagelist, $stream);
+        $this->processMediaList($medialist, $stream);
+        fclose($stream);
 
         // sort history list, using shell utility to prevent memory issue
         $historylisttemp = $this->temp_dir.'/historylist.txt.tmp';
@@ -194,11 +195,9 @@ class git_importer {
         ));
     }
 
-    private function processPageList($listfile, $historyfile) {
+    private function processPageList($listfile, $stream) {
         global $lang;
         $lh = fopen($listfile, 'rb');
-        $hh = fopen($historyfile, 'r+b');
-        fseek($hh, 0, SEEK_END);  // move to eof for appending
         while (!feof($lh)) {
             $id = rtrim(fgets($lh), "\r\n");
             if ($id) {
@@ -213,7 +212,7 @@ class git_importer {
                         $line = rtrim(fgets($fh), "\r\n");
                         if ($line) {
                             $lastline = $line."\t"."attic"."\t".$id."\n";
-                            fwrite( $hh, $lastline );
+                            fwrite( $stream, $lastline );
                         }
                     }
                     fclose($fh);
@@ -239,14 +238,14 @@ class git_importer {
                         );
                         $line = implode("\t", $logline);
                         $line = $line."\t"."pages"."\t".$id."\n";
-                        fwrite( $hh, $line );
+                        fwrite( $stream, $line );
                     }
                     // page is latest revision, replace attic, which might not exist
                     else if ($datadate == $lastdate) {
-                        fseek( $hh, -strlen($lastline), SEEK_CUR );  // back to previous line
+                        fseek( $stream, -strlen($lastline), SEEK_CUR );  // back to previous line
                         $logline[7] = "pages";  // modify the data-type field
                         $line = implode("\t", $logline);  // already has linefeed, don't append
-                        fwrite( $hh, $line );
+                        fwrite( $stream, $line );
                     }
                 }
                 else {
@@ -265,20 +264,17 @@ class git_importer {
                         );
                         $line = implode("\t", $logline);
                         $line = $line."\t"."pages"."\t".$id."\n";
-                        fwrite( $hh, $line );
+                        fwrite( $stream, $line );
                     }
                 }
             }
         }
         fclose($lh);
-        fclose($hh);
     }
 
-    private function processMediaList($listfile, $historyfile) {
+    private function processMediaList($listfile, $stream) {
         global $lang;
         $lh = fopen($listfile, 'rb');
-        $hh = fopen($historyfile, 'r+b');
-        fseek($hh, 0, SEEK_END);  // move to eof for appending
         while (!feof($lh)) {
             $id = rtrim(fgets($lh), "\r\n");
             if ($id) {
@@ -293,7 +289,7 @@ class git_importer {
                         $line = rtrim(fgets($fh), "\r\n");
                         if ($line) {
                             $lastline = $line."\t"."media_attic"."\t".$id."\n";
-                            fwrite( $hh, $lastline );
+                            fwrite( $stream, $lastline );
                         }
                     }
                     fclose($fh);
@@ -319,14 +315,14 @@ class git_importer {
                         );
                         $line = implode("\t", $logline);
                         $line = $line."\t"."media"."\t".$id."\n";
-                        fwrite( $hh, $line );
+                        fwrite( $stream, $line );
                     }
                     // media is latest revision, replace attic, which might not exist
                     else if ($datadate == $lastdate) {
-                        fseek( $hh, -strlen($lastline), SEEK_CUR );  // back to previous line
+                        fseek( $stream, -strlen($lastline), SEEK_CUR );  // back to previous line
                         $logline[7] = "media";  // modify the data-type field
                         $line = implode("\t", $logline);  // already has linefeed, don't append
-                        fwrite( $hh, $line );
+                        fwrite( $stream, $line );
                     }
                 }
                 else {
@@ -345,13 +341,12 @@ class git_importer {
                         );
                         $line = implode("\t", $logline);
                         $line = $line."\t"."media"."\t".$id."\n";
-                        fwrite( $hh, $line );
+                        fwrite( $stream, $line );
                     }
                 }
             }
         }
         fclose($lh);
-        fclose($hh);
     }
 
     private function importHistory($repo, $historyfile) {
