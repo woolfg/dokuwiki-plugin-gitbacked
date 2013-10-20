@@ -371,16 +371,38 @@ class git_importer {
             $id = array_pop($logline);
             $data_type = array_pop($logline);
             $date = $logline[0];
+            $ip = $logline[1];
             $type = $logline[2];
             $user = $logline[4];
             $summary = $logline[5];
 
-            // record wiki edit log
-            $logline = implode("\t", $logline);
-            file_put_contents($logfile, $logline);
-            $repo->git('add', array(
-                '' => $logfile
-                ));
+            // Do not record a log for external edits
+            // since they are not edited via the wiki system
+            // 
+            // TODO: Improve external edit detection
+            //       Currently the protocol is not to produce false negative.
+            //       False positive only occurs on anonymous edits on the localhost server,
+            //       which should be very rare.
+            //
+            //   $ip:      false positive if edited on a localhost server
+            //   $user:    false positive if it's edited by an anonymous user
+            //   $summary: false positive if someone writes a summary identical to "external edit"
+            //             false negative if edited under a different language pack
+            $external_edit = ($ip == '127.0.0.1' && !$user);
+            if ($external_edit) {
+                $repo->git('rm', array(
+                    'cached' => null,
+                    'ignore-unmatch' => null,
+                    '' => $logfile
+                    ));
+            }
+            else {
+                $logline = implode("\t", $logline);
+                file_put_contents($logfile, $logline);
+                $repo->git('add', array(
+                    '' => $logfile
+                    ));
+            }
 
             // add data to commit
             switch ($data_type) {
