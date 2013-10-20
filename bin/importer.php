@@ -353,7 +353,6 @@ class git_importer {
         // basic settings
         $base = DOKU_INC.$this->getConf('repoWorkDir');
         $base_cut = strlen($base) - 1;
-        $logfile = $this->temp_dir.'/_edit';
 
         // read history entries line by line and process them
         $hh = fopen($historyfile, "rb");
@@ -384,20 +383,6 @@ class git_importer {
             //   $summary: false positive if someone writes a summary identical to "external edit"
             //             false negative if edited under a different language pack
             $external_edit = ($ip == '127.0.0.1' && !$user);
-            if ($external_edit) {
-                $repo->git('rm', array(
-                    'cached' => null,
-                    'ignore-unmatch' => null,
-                    '' => $logfile
-                    ));
-            }
-            else {
-                $logline = implode("\t", $logline);
-                file_put_contents($logfile, $logline);
-                $repo->git('add', array(
-                    '' => $logfile
-                    ));
-            }
 
             // add data to commit
             switch ($data_type) {
@@ -468,7 +453,9 @@ class git_importer {
             }
 
             // now commit
-            $commit_message = $message;
+            $histmeta =& plugin_load('helper', 'gitbacked_histmeta');
+            if ($external_edit) $logline = "";
+            $commit_message = $histmeta->pack($message, $logline, $commands);
             $commit_date = $date;
             $repo->git('commit', array(
                 'allow-empty' => null,
