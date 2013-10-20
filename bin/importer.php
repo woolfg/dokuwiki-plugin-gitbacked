@@ -76,7 +76,7 @@ class git_importer {
         }
 
         // init git repo
-        $repo =& plugin_load('helper', 'gitbacked');
+        $repo =& plugin_load('helper', 'gitbacked_git');
         $repo->setGitRepo(null, $temp_dir);
 
         // collect history
@@ -335,7 +335,7 @@ class git_importer {
 
     // this script is not a true plugin, fake this method for convenience
     private function getConf($setting, $notset=false) {
-        $my =& plugin_load('helper', 'gitbacked');
+        $my =& plugin_load('helper', 'gitbacked_git');
         return $my->getConf($setting, $notset);
     }
 
