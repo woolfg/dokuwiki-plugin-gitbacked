@@ -77,7 +77,7 @@ class git_importer {
 
         // init git repo
         $repo =& plugin_load('helper', 'gitbacked_git');
-        $repo->setGitRepo(null, $temp_dir);
+        $repo->setGitRepo($this->git_dir, $temp_dir);
 
         // collect history
         $history = $temp_dir.'/history.txt';
