@@ -86,132 +86,254 @@ class git_importer {
         $repo->setGitRepo($this->git_dir, $temp_dir, $this->git_branch);
 
         // collect history
-        $history = $temp_dir.'/history.txt';
-        $hh = fopen($history, 'wb');
-        // -- meta/*.changes
-        $data = null;
+
+        // search and record all page-ids and media-ids
+        $pagelist = $temp_dir.'/pagelist.txt';
+        $this->getPageList($pagelist);
+        $medialist = $temp_dir.'/medialist.txt';
+        $this->getMediaList($medialist);
+
+        // make history list
+        // format: <logline> <tab> <data-type> <tab> <data-file>
+        $historylist = $temp_dir.'/historylist.txt';
+        file_put_contents($historylist, "");
+        $this->processPageList($pagelist, $historylist);
+        $this->processMediaList($medialist, $historylist);
+
+        // sort history list, using shell utility to prevent memory issue
+        $historylisttemp = $temp_dir.'/historylist.txt.tmp';
+        rename($historylist, $historylisttemp);
+        passthru(sprintf(
+            'sort -n %s >%s',
+            escapeshellarg($historylisttemp),
+            escapeshellarg($historylist)
+        ));
+
+        // import from history list
+        $this->importHistory($repo, $historylist, $temp_dir);
+
+        // unlock, clean, and done
+        @rmdir($lock);
+        passthru(sprintf(
+            'rm -rf %s',
+            escapeshellarg($temp_dir)
+        ));
+        print 'done.'.DOKU_LF;
+    }
+
+    private function getPageList($listfile) {
+        global $conf;
+        // sort cannot output to the same file, write to a temp file first
+        $tmpfile = $listfile.'.tmp';
+        $lh = fopen($tmpfile, 'wb');
+        // meta
+        $data = array();
         search($data, $conf['metadir'], 'search_universal', array(
             'listfiles' => true,
             'skipacl' => true,
             'filematch' => '.*\.changes'
             ));
         foreach($data as $item) {
-            $id = substr($item['id'], 0, -8);  // strip ext
-            $file = metaFN($id, '.changes');
-            $fh = fopen($file, "rb");
-            while (!feof($fh)) {
-                $line = rtrim(fgets($fh), "\r\n");
-                if ($line) fwrite( $hh, $line."\t".$id."\t"."meta"."\n" );
-            }
-            fclose($fh);
+            $id = substr($item['id'], 0, -8);  // strip '.changes'
+            fwrite( $lh, $id."\n" );
         }
-        // -- media_meta/*.changes
-        $data = null;
-        search($data, $conf['mediametadir'], 'search_universal', array(
-            'listfiles' => true,
-            'skipacl' => true,
-            'filematch' => '.*\.changes'
-            ));
-        foreach($data as $item) {
-            $id = substr($item['id'], 0, -8);  // strip ext
-            $file = mediaMetaFN($id, '.changes');
-            $fh = fopen($file, "rb");
-            while (!feof($fh)) {
-                $line = rtrim(fgets($fh), "\r\n");
-                if ($line) fwrite( $hh, $line."\t".$id."\t"."media_meta"."\n" );
-            }
-            fclose($fh);
-        }
-        // -- pages/*
-        $data = null;
+        // pages
+        $data = array();
         search($data, $conf['datadir'], 'search_universal', array(
             'listfiles' => true,
             'skipacl' => true,
             'pagesonly' => true
             ));
         foreach($data as $item) {
-            $id = $item['id'];
-            $file = wikiFN($id, '', false);
-            $old = @filemtime($file); // from page
-            $oldRev = getRevisions($id, -1, 1, 1024); // from changelog
-            $oldRev = (int) (empty($oldRev) ? 0 : $oldRev[0]);
-            if(!@file_exists(wikiFN($id, $old)) && @file_exists($file) && $old >= $oldRev) {
-                $logline = array(
-                    'date'  => $old,
-                    'ip'    => '127.0.0.1',
-                    'type'  => DOKU_CHANGE_TYPE_EDIT,
-                    'id'    => $id,
-                    'user'  => '',
-                    'sum'   => $lang['external_edit'],
-                    'extra' => ''
-                    );
-                $line = implode("\t", $logline);
-                fwrite( $hh, $line."\t".$id."\t"."pages"."\n" );
-            }
+            $id = $item['id'];  // no additional ext here
+            fwrite( $lh, $id."\n" );
         }
-        // -- media/*
-        $data = null;
+        fclose($lh);
+        // sort and unique the history, using shell to prevent memory issue
+        passthru(sprintf(
+            'sort %s | uniq >%s',
+            escapeshellarg($tmpfile),
+            escapeshellarg($listfile)
+        ));
+    }
+
+    private function getMediaList($listfile) {
+        global $conf;
+        // sort cannot output to the same file, write to a temp file first
+        $tmpfile = $listfile.'.tmp';
+        $lh = fopen($tmpfile, 'wb');
+        // media_meta
+        $data = array();
+        search($data, $conf['mediametadir'], 'search_universal', array(
+            'listfiles' => true,
+            'skipacl' => true,
+            'filematch' => '.*\.changes'
+            ));
+        foreach($data as $item) {
+            $id = substr($item['id'], 0, -8);  // strip '.changes'
+            fwrite( $lh, $id."\n" );
+        }
+        // media
+        $data = array();
         search($data, $conf['mediadir'], 'search_universal', array(
             'listfiles' => true,
             'skipacl' => true
             ));
         foreach($data as $item) {
-            $id = $item['id'];
-            $file = mediaFN($id, '');
-            $old = @filemtime($file);
-            if(!@file_exists(mediaFN($id, $old)) && @file_exists($file)) {
-                $logline = array(
-                    'date'  => $old,
-                    'ip'    => '127.0.0.1',
-                    'type'  => DOKU_CHANGE_TYPE_EDIT,
-                    'id'    => $id,
-                    'user'  => '',
-                    'sum'   => $lang['external_edit'],
-                    'extra' => ''
-                    );
-                $line = implode("\t", $logline);
-                fwrite( $hh, $line."\t".$id."\t"."media"."\n" );
+            $id = $item['id'];  // no additional ext here
+            fwrite( $lh, $id."\n" );
+        }
+        fclose($lh);
+        // sort and unique the history, using shell command to prevent memory issue
+        passthru(sprintf(
+            'sort %s | uniq >%s',
+            escapeshellarg($tmpfile),
+            escapeshellarg($listfile)
+        ));
+    }
+
+    private function processPageList($listfile, $historyfile) {
+        global $lang;
+        $lh = fopen($listfile, 'rb');
+        $hh = fopen($historyfile, 'r+b');
+        fseek($hh, 0, SEEK_END);  // move to eof for appending
+        while (!feof($lh)) {
+            $id = rtrim(fgets($lh), "\r\n");
+            if ($id) {
+                $datafile = wikiFN($id, '', false);
+                $metafile = metaFN($id, '.changes');
+                $lastdate = 0;
+                $lastline = "";
+                if (is_file($metafile)) {
+                    $fh = fopen($metafile, "rb");
+                    while (!feof($fh)) {
+                        $line = rtrim(fgets($fh), "\r\n");
+                        if ($line) {
+                            $lastline = $line."\t"."attic"."\t".$id."\n";
+                            fwrite( $hh, $lastline );
+                        }
+                    }
+                    fclose($fh);
+                    if ($lastline) { // last line not empty
+                        $logline = explode("\t", $lastline);
+                        $lastdate = intval($logline[0]);
+                    }
+                }
+                if (is_file($datafile)) {
+                    $datadate = filemtime($datafile);
+                    if ($datadate > $lastdate) {  // page is not revisioned, local change
+                        $logline = array(  // fake a logline
+                            'date'  => $datadate,
+                            'ip'    => '127.0.0.1',
+                            'type'  => DOKU_CHANGE_TYPE_EDIT,
+                            'id'    => $id,
+                            'user'  => '',
+                            'sum'   => $lang['external_edit'],
+                            'extra' => ''
+                        );
+                        $line = implode("\t", $logline);
+                        $line = $line."\t"."pages"."\t".$id."\n";
+                        fwrite( $hh, $line );
+                    }
+                    else if ($datadate == $lastdate) {  // page is last revision, replace attic, which might not exist
+                        fseek( $hh, -strlen($lastline), SEEK_CUR );  // back to previous line
+                        $logline[7] = "pages";
+                        $line = implode("\t", $logline);  // already has linefeed
+                        fwrite( $hh, $line );
+                    }
+                }
             }
         }
+        fclose($lh);
         fclose($hh);
+    }
 
-        // sort the history, using shell sort to prevent memory issue
-        $history_sort = $temp_dir.'/history_sort.txt';
-        passthru(sprintf(
-            'sort -n %s >%s',
-            escapeshellarg($history),
-            escapeshellarg($history_sort)
-        ));
+    private function processMediaList($listfile, $historyfile) {
+        global $lang;
+        $lh = fopen($listfile, 'rb');
+        $hh = fopen($historyfile, 'r+b');
+        fseek($hh, 0, SEEK_END);  // move to eof for appending
+        while (!feof($lh)) {
+            $id = rtrim(fgets($lh), "\r\n");
+            if ($id) {
+                $datafile = mediaFN($id);
+                $metafile = mediaMetaFN($id, '.changes');
+                $lastdate = 0;
+                $lastline = "";
+                if (is_file($metafile)) {
+                    $fh = fopen($metafile, "rb");
+                    while (!feof($fh)) {
+                        $line = rtrim(fgets($fh), "\r\n");
+                        if ($line) {
+                            $lastline = $line."\t"."media_attic"."\t".$id."\n";
+                            fwrite( $hh, $lastline );
+                        }
+                    }
+                    fclose($fh);
+                    if ($lastline) { // last line not empty
+                        $logline = explode("\t", $lastline);
+                        $lastdate = intval($logline[0]);
+                    }
+                }
+                if (is_file($datafile)) {
+                    $datadate = filemtime($datafile);
+                    if ($datadate > $lastdate) {  // page is not revisioned, local change
+                        $logline = array(  // fake a logline
+                            'date'  => $datadate,
+                            'ip'    => '127.0.0.1',
+                            'type'  => DOKU_CHANGE_TYPE_EDIT,
+                            'id'    => $id,
+                            'user'  => '',
+                            'sum'   => $lang['external_edit'],
+                            'extra' => ''
+                        );
+                        $line = implode("\t", $logline);
+                        $line = $line."\t"."media"."\t".$id."\n";
+                        fwrite( $hh, $line );
+                    }
+                    else if ($datadate == $lastdate) {  // page is last revision, replace attic, which might not exist
+                        fseek( $hh, -strlen($lastline), SEEK_CUR );  // back to previous line
+                        $logline[7] = "media";
+                        $line = implode("\t", $logline);  // already has linefeed
+                        fwrite( $hh, $line );
+                    }
+                }
+            }
+        }
+        fclose($lh);
+        fclose($hh);
+    }
 
-        // import from history
+    private function importHistory($repo, $historyfile, $temp_dir) {
         $base = DOKU_INC.$this->getConf('repoWorkDir');
         $base_cut = strlen($base) - 1;
-        $hh = fopen($history_sort, "rb");
+        $logfile = $temp_dir.'/_edit';
+
+        $hh = fopen($historyfile, "rb");
         while (!feof($hh)) {
             $line = rtrim(fgets($hh), "\r\n");
             $logline = explode("\t", $line);
-            $data_type = array_pop($logline);
             $id = array_pop($logline);
+            $data_type = array_pop($logline);
             $date = $logline[0];
             $type = $logline[2];
             $user = $logline[4];
-            $message = $logline[5];
+            $summary = $logline[5];
             $logline = implode("\t", $logline);
-            $logfile = $temp_dir.'/_edit';
             file_put_contents($logfile, $logline);
             $repo->git('add', array(
                 '' => $logfile
                 ));
             switch ($data_type) {
-                case "meta":
-                    $source = wikiFN($id, '', false);
-                    $file = $temp_dir.'/'.substr( $source, $base_cut );
-                    print "import $source \n";
+                case "pages":
+                case "attic":
+                    $item = wikiFN($id, '', false);
+                    $file = $temp_dir.'/'.substr( $item, $base_cut );
                     io_mkdir_p(dirname($file));
                     if ($type == 'D') {
                         $message = str_replace(
                             array('%page%', '%summary%', '%user%'),
-                            array($id, $message, $user),
+                            array($id, $summary, $user),
                             $this->getConf('commitPageMsgDel')
                         );
                         $repo->git('rm', array(
@@ -226,13 +348,13 @@ class git_importer {
                             ));
                     }
                     else {
+                        $datafile = ($data_type=='pages') ? $item : wikiFN($id, $date, false);
+                        file_put_contents($file, io_readFile($datafile, false));
                         $message = str_replace(
                             array('%page%', '%summary%', '%user%'),
-                            array($id, $message, $user),
+                            array($id, $summary, $user),
                             $this->getConf('commitPageMsg')
                         );
-                        $attic = wikiFN($id, $date, false);
-                        file_put_contents($file, io_readFile($attic, false));
                         $repo->git('add', array(
                             '' => $file
                             ));
@@ -243,10 +365,10 @@ class git_importer {
                             ));
                     }
                     break;
-                case "media_meta":
-                    $source = mediaFN($id, '');
-                    $file = $temp_dir.'/'.substr( $source, $base_cut );
-                    print "import $source \n";
+                case "media":
+                case "media_attic":
+                    $item = mediaFN($id, '');
+                    $file = $temp_dir.'/'.substr( $item, $base_cut );
                     io_mkdir_p(dirname($file));
                     if ($type == 'D') {
                         $message = str_replace(
@@ -266,18 +388,16 @@ class git_importer {
                             ));
                     }
                     else {
+                        $datafile = ($data_type=='media') ? $item : mediaFN($id, $date);
+                        copy($datafile, $file);
                         $message = str_replace(
                             array('%media%', '%user%'),
                             array($id, $user),
                             $this->getConf('commitMediaMsg')
                         );
-                        $attic = mediaFN($id, $date);
-                        if (is_file($attic)) {
-                            @copy($attic, $file);
-                            $repo->git('add', array(
-                                '' => $file
-                                ));
-                        }
+                        $repo->git('add', array(
+                            '' => $file
+                            ));
                         $repo->git('commit', array(
                             'allow-empty' => null,
                             'm' => $message,
@@ -285,58 +405,9 @@ class git_importer {
                             ));
                     }
                     break;
-                case "pages":
-                    $source = wikiFN($id, '', false);
-                    $file = $temp_dir.'/'.substr( $source, $base_cut );
-                    print "import $source \n";
-                    io_mkdir_p(dirname($file));
-                    copy($source, $file);
-                    $message = str_replace(
-                        array('%page%', '%summary%', '%user%'),
-                        array($id, $message, $user),
-                        $this->getConf('commitPageMsg')
-                    );
-                    $repo->git('add', array(
-                        '' => $file
-                        ));
-                    $repo->git('commit', array(
-                        'allow-empty' => null,
-                        'm' => $message,
-                        'date' => $date
-                        ));
-                    break;
-                case "media":
-                    $source = mediaFN($id, '');
-                    $file = $temp_dir.'/'.substr( $source, $base_cut );
-                    print "import $source \n";
-                    io_mkdir_p(dirname($file));
-                    copy($source, $file);
-                    $message = str_replace(
-                        array('%media%', '%user%'),
-                        array($id, $user),
-                        $this->getConf('commitMediaMsg')
-                    );
-                    $repo->git('add', array(
-                        '' => $file
-                        ));
-                    $repo->git('commit', array(
-                        'allow-empty' => null,
-                        'm' => $message,
-                        'date' => $date
-                        ));
-                    break;
             }
         }
         fclose($hh);
-        
-
-        // unlock, clean, and done
-        @rmdir($lock);
-        passthru(sprintf(
-            'rm -rf %s',
-            escapeshellarg($temp_dir)
-        ));
-        print 'done.'.DOKU_LF;
     }
 
     // this script is not a true plugin, fake this method for convenience
