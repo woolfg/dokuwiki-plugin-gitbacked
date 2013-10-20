@@ -204,8 +204,9 @@ class git_importer {
             if ($id) {
                 $datafile = wikiFN($id, '', false);
                 $metafile = metaFN($id, '.changes');
-                $lastdate = 0;
                 $lastline = "";
+                $lastdate = 0;
+                $lastaction = "";
                 if (is_file($metafile)) {
                     $fh = fopen($metafile, "rb");
                     while (!feof($fh)) {
@@ -219,12 +220,15 @@ class git_importer {
                     if ($lastline) { // last line not empty
                         $logline = explode("\t", $lastline);
                         $lastdate = intval($logline[0]);
+                        $lastaction = $logline[2];
                     }
                 }
                 if (is_file($datafile)) {
                     $datadate = filemtime($datafile);
-                    if ($datadate > $lastdate) {  // page is not revisioned, local change
-                        $logline = array(  // fake a logline
+                    // there's a newer external edit on the page
+                    // fake a logline for later process
+                    if ($datadate > $lastdate) {
+                        $logline = array(
                             'date'  => $datadate,
                             'ip'    => '127.0.0.1',
                             'type'  => DOKU_CHANGE_TYPE_EDIT,
@@ -237,10 +241,30 @@ class git_importer {
                         $line = $line."\t"."pages"."\t".$id."\n";
                         fwrite( $hh, $line );
                     }
-                    else if ($datadate == $lastdate) {  // page is last revision, replace attic, which might not exist
+                    // page is latest revision, replace attic, which might not exist
+                    else if ($datadate == $lastdate) {
                         fseek( $hh, -strlen($lastline), SEEK_CUR );  // back to previous line
-                        $logline[7] = "pages";
-                        $line = implode("\t", $logline);  // already has linefeed
+                        $logline[7] = "pages";  // modify the data-type field
+                        $line = implode("\t", $logline);  // already has linefeed, don't append
+                        fwrite( $hh, $line );
+                    }
+                }
+                else {
+                    // page is deleted externally after the latest wiki-edit
+                    // fake a logline with action type "delete" for later process
+                    // exact time is impossible to determine, pretend $lastdate + 1 (to sort after)
+                    if ($lastaction != "D" && $lastaction != "") {
+                        $logline = array(
+                            'date'  => $lastdate + 1,
+                            'ip'    => '127.0.0.1',
+                            'type'  => DOKU_CHANGE_TYPE_DELETE,
+                            'id'    => $id,
+                            'user'  => '',
+                            'sum'   => $lang['external_edit'],
+                            'extra' => ''
+                        );
+                        $line = implode("\t", $logline);
+                        $line = $line."\t"."pages"."\t".$id."\n";
                         fwrite( $hh, $line );
                     }
                 }
@@ -260,8 +284,9 @@ class git_importer {
             if ($id) {
                 $datafile = mediaFN($id);
                 $metafile = mediaMetaFN($id, '.changes');
-                $lastdate = 0;
                 $lastline = "";
+                $lastdate = 0;
+                $lastaction = "";
                 if (is_file($metafile)) {
                     $fh = fopen($metafile, "rb");
                     while (!feof($fh)) {
@@ -275,11 +300,14 @@ class git_importer {
                     if ($lastline) { // last line not empty
                         $logline = explode("\t", $lastline);
                         $lastdate = intval($logline[0]);
+                        $lastaction = $logline[2];
                     }
                 }
                 if (is_file($datafile)) {
                     $datadate = filemtime($datafile);
-                    if ($datadate > $lastdate) {  // page is not revisioned, local change
+                    // there's a newer external edit on the media
+                    // fake a logline for later process
+                    if ($datadate > $lastdate) {
                         $logline = array(  // fake a logline
                             'date'  => $datadate,
                             'ip'    => '127.0.0.1',
@@ -293,10 +321,30 @@ class git_importer {
                         $line = $line."\t"."media"."\t".$id."\n";
                         fwrite( $hh, $line );
                     }
-                    else if ($datadate == $lastdate) {  // page is last revision, replace attic, which might not exist
+                    // media is latest revision, replace attic, which might not exist
+                    else if ($datadate == $lastdate) {
                         fseek( $hh, -strlen($lastline), SEEK_CUR );  // back to previous line
-                        $logline[7] = "media";
-                        $line = implode("\t", $logline);  // already has linefeed
+                        $logline[7] = "media";  // modify the data-type field
+                        $line = implode("\t", $logline);  // already has linefeed, don't append
+                        fwrite( $hh, $line );
+                    }
+                }
+                else {
+                    // media is deleted externally after the latest wiki-edit
+                    // fake a logline with action type "delete" for later process
+                    // exact time is impossible to determine, pretend $lastdate + 1 (to sort after)
+                    if ($lastaction != "" && $lastaction != "D") {
+                        $logline = array(
+                            'date'  => $lastdate + 1,
+                            'ip'    => '127.0.0.1',
+                            'type'  => DOKU_CHANGE_TYPE_DELETE,
+                            'id'    => $id,
+                            'user'  => '',
+                            'sum'   => $lang['external_edit'],
+                            'extra' => ''
+                        );
+                        $line = implode("\t", $logline);
+                        $line = $line."\t"."media"."\t".$id."\n";
                         fwrite( $hh, $line );
                     }
                 }
