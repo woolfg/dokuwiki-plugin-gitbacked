@@ -15,4 +15,5 @@ $conf['commitMediaMsgDel'] = 'Wiki media %media% deleted by %user%';
 $conf['gitPath'] = '/usr/bin/git';
 $conf['repoPath'] = $GLOBALS['conf']['savedir'];
 $conf['repoWorkDir'] = $GLOBALS['conf']['savedir'];
+$conf['gitBranch'] = '';
 $conf['addParams'] = '';

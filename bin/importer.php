@@ -9,7 +9,7 @@ require_once DOKU_INC.'inc/cliopts.php';
 
 // handle options
 $short_opts = 'hr';
-$long_opts  = array('help', 'run', 'git-dir=');
+$long_opts  = array('help', 'run', 'git-dir=', 'branch=');
 
 $OPTS = Doku_Cli_Opts::getOptions(__FILE__, $short_opts, $long_opts);
 
@@ -31,6 +31,11 @@ if ( $OPTS->has('git-dir') ) {
     $importer->git_dir = getSuppliedArgument($OPTS, null, 'git-dir');
 }
 
+// handle '--branch' option
+if ( $OPTS->has('branch') ) {
+    $importer->git_branch = getSuppliedArgument($OPTS, null, 'branch');
+}
+
 // handle '--run' option
 if ( $OPTS->has('r') or $OPTS->has('run') ) {
     $importer->import();
@@ -46,6 +51,7 @@ function usage() {
         -h, --help     show this help and exit
         -r, --run      run importer
         --git-dir      defines the git repo path (overwrites $conf['repoPath'])
+        --branch       defines the git branch to import (overwrites $conf['gitBranch'])
 
 EOF;
 }
@@ -77,7 +83,7 @@ class git_importer {
 
         // init git repo
         $repo =& plugin_load('helper', 'gitbacked_git');
-        $repo->setGitRepo($this->git_dir, $temp_dir);
+        $repo->setGitRepo($this->git_dir, $temp_dir, $this->git_branch);
 
         // collect history
         $history = $temp_dir.'/history.txt';

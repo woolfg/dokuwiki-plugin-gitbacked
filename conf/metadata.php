@@ -15,5 +15,6 @@ $meta['commitMediaMsgDel'] = array('string');
 $meta['gitPath'] = array('string');
 $meta['repoPath'] = array('string');
 $meta['repoWorkDir'] = array('string');
+$meta['gitBranch'] = array('string');
 $meta['addParams'] = array('string');
 

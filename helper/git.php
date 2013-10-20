@@ -20,15 +20,16 @@ class helper_plugin_gitbacked_git extends DokuWiki_Plugin {
      *
      * @param  string   git repository path, use conf by default (relative to dokuwiki dir)
      * @param  string   git working tree, use conf by default (relative to dokuwiki dir)
+     * @param  string   switch to the git branch if given
      * @param  bool     if true, create a git repo if not exist
      * @param  string   if true, create an .htaccess for the git repo dir if not exist
      */
-    function setGitRepo($repo_path=null, $work_tree=null, $create_new = true, $protect=true) {
+    function setGitRepo($repo_path=null, $work_tree=null, $branch=null, $create_new=true, $protect=true) {
         // set repo path
         $this->repo_path = !empty($repo_path) ? $repo_path : DOKU_INC.$this->getConf('repoPath');
         if (!is_dir($this->repo_path.'/.git')) {
             if ($create_new) {
-                $this->run_command(escapeshellarg($this->git_path).' init '.escapeshellarg($this->repo_path));
+                $this->cmd(escapeshellarg($this->git_path).' init '.escapeshellarg($this->repo_path));
             }
             else {
                 throw new Exception('"'.$this->repo_path.'" is not a git repository');
@@ -54,9 +55,25 @@ class helper_plugin_gitbacked_git extends DokuWiki_Plugin {
         $this->git_bin = escapeshellarg($this->git_path).
             ' --git-dir '.escapeshellarg($this->repo_path.'/.git').
             ' --work-tree '.escapeshellarg($this->work_tree);
+
+        // switch branch
+        if (!$branch) $branch = $this->getConf('gitBranch');
+        if ($branch) {
+            $list = $this->list_branches(true);
+            if (array_search("* $branch", $list) === false) {
+                // not exist --> make an orphan
+                if (array_search($branch, $list) === false) {
+                    $this->cmd_git('checkout --force --orphan '.escapeshellarg($branch));
+                }
+                // exist, not active --> checkout
+                else {
+                    $this->cmd_git('checkout --force '.escapeshellarg($branch));
+                }
+            }
+        }
     }
 
-    function run_command($command) {
+    function cmd($command) {
 
         $descriptorspec = array(
             1 => array('pipe', 'w'),
@@ -77,10 +94,10 @@ class helper_plugin_gitbacked_git extends DokuWiki_Plugin {
         return $stdout;
     }
 
-    function run_git_command($command) {
+    function cmd_git($command) {
         $command = $this->git_bin." ".$command;
         print $command."\n";  // for debug
-        return $this->run_command($command);
+        return $this->cmd($command);
     }
 
     function git($command, $params=array()) {
@@ -88,6 +105,18 @@ class helper_plugin_gitbacked_git extends DokuWiki_Plugin {
             $command .= (strlen($opt) == 1) ? ' -'.$opt : ' --'.$opt;
             if (!is_null($value)) $command .= ' '.escapeshellarg($value);
         }
-        return $this->run_git_command($command);
+        return $this->cmd_git($command);
+    }
+
+    function list_branches($keep_asterisk = false) {
+        $branchArray = explode("\n", $this->git("branch"));
+        foreach($branchArray as $i => &$branch) {
+            $branch = trim($branch);
+            if (! $keep_asterisk)
+                $branch = str_replace("* ", "", $branch);
+            if ($branch == "")
+                unset($branchArray[$i]);
+        }
+        return $branchArray;
     }
 }

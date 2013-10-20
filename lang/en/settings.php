@@ -16,4 +16,5 @@ $lang['commitMediaMsgDel'] = 'Commit message for deleted media files (%user%,%me
 $lang['gitPath'] = 'Full path of the git program';
 $lang['repoPath'] = 'Path of the git repo, relative to dokuwiki directory (e.g. the savedir '.$GLOBALS['conf']['savedir'].')';
 $lang['repoWorkDir'] = 'Path of the git working tree, relative to dokuwiki directory, must contain "pages" and "media" directories (e.g. the savedir '.$GLOBALS['conf']['savedir'].')';
+$lang['gitBranch'] = 'Specify a branch to commit, use current branch if left blank (NOTE: Force checkout will be performed if git is not on the specified branch, and uncomitted changes may lose permanently.)';
 $lang['addParams'] = 'Additional git parameters (added to the git execution command)';
