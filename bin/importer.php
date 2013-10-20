@@ -420,10 +420,12 @@ class git_importer {
                     }
                     else {
                         $datafile = ($data_type=='pages') ? $item : wikiFN($id, $date, false);
-                        file_put_contents($file, io_readFile($datafile, false));
-                        $repo->git('add', array(
-                            '' => $file
-                            ));
+                        if (is_file($datafile)) {
+                            file_put_contents($file, io_readFile($datafile, false));
+                            $repo->git('add', array(
+                                '' => $file
+                                ));
+                        }
                         $message = str_replace(
                             array('%page%', '%summary%', '%user%'),
                             array($id, $summary, $user),
@@ -450,10 +452,12 @@ class git_importer {
                     }
                     else {
                         $datafile = ($data_type=='media') ? $item : mediaFN($id, $date);
-                        copy($datafile, $file);
-                        $repo->git('add', array(
-                            '' => $file
-                            ));
+                        if (is_file($datafile)) {
+                            copy($datafile, $file);
+                            $repo->git('add', array(
+                                '' => $file
+                                ));
+                        }
                         $message = str_replace(
                             array('%media%', '%user%'),
                             array($id, $user),
