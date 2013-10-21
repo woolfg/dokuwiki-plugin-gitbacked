@@ -203,30 +203,28 @@ class git_importer {
             if ($id) {
                 $datafile = wikiFN($id, '', false);
                 $metafile = metaFN($id, '.changes');
-                $lastline = "";
-                $lastdate = 0;
-                $lastaction = "";
+                $lastline = null;
                 if (is_file($metafile)) {
                     $fh = fopen($metafile, "rb");
                     while (!feof($fh)) {
                         $line = rtrim(fgets($fh), "\r\n");
                         if ($line) {
-                            $lastline = $line."\t".$id."\t"."attic"."\n";
-                            fwrite( $stream, $lastline );
+                            $lastline = $line = $line."\t".$id."\t"."attic"."\n";
+                            fwrite( $stream, $line );
                         }
                     }
                     fclose($fh);
                     if ($lastline) { // last line not empty
-                        $logline = explode("\t", $lastline);
-                        $lastdate = intval($logline[0]);
-                        $lastaction = $logline[2];
+                        $lastlinearray = explode("\t", $lastline);
+                        $lastdate = intval($lastlinearray[0]);
+                        $lastaction = $lastlinearray[2];
                     }
                 }
                 if (is_file($datafile)) {
                     $datadate = filemtime($datafile);
                     // there's a newer external edit on the page
                     // fake a logline for later process
-                    if ($datadate > $lastdate) {
+                    if (!$lastline || ($datadate > $lastdate)) {
                         $logline = array(
                             'date'  => $datadate,
                             'ip'    => '127.0.0.1',
@@ -241,10 +239,10 @@ class git_importer {
                         fwrite( $stream, $line );
                     }
                     // page is latest revision, replace attic, which might not exist
-                    else if ($datadate == $lastdate) {
+                    else if ($lastline && ($datadate == $lastdate)) {
                         fseek( $stream, -strlen($lastline), SEEK_CUR );  // back to previous line
-                        $logline[8] = "pages"."\n";  // modify the data-type field
-                        $line = implode("\t", $logline);  // already has linefeed, don't append
+                        $lastlinearray[8] = "pages"."\n";  // modify the data-type field
+                        $line = implode("\t", $lastlinearray);  // already has linefeed, don't append
                         fwrite( $stream, $line );
                     }
                 }
@@ -252,7 +250,7 @@ class git_importer {
                     // page is deleted externally after the latest wiki-edit
                     // fake a logline with action type "delete" for later process
                     // exact time is impossible to determine, pretend $lastdate + 1 (to sort after)
-                    if ($lastaction != "D" && $lastaction != "") {
+                    if ($lastline && ($lastaction != "D")) {
                         $logline = array(
                             'date'  => $lastdate + 1,
                             'ip'    => '127.0.0.1',
@@ -280,30 +278,28 @@ class git_importer {
             if ($id) {
                 $datafile = mediaFN($id);
                 $metafile = mediaMetaFN($id, '.changes');
-                $lastline = "";
-                $lastdate = 0;
-                $lastaction = "";
+                $lastline = null;
                 if (is_file($metafile)) {
                     $fh = fopen($metafile, "rb");
                     while (!feof($fh)) {
                         $line = rtrim(fgets($fh), "\r\n");
                         if ($line) {
-                            $lastline = $line."\t".$id."\t"."media_attic"."\n";
-                            fwrite( $stream, $lastline );
+                            $lastline = $line = $line."\t".$id."\t"."media_attic"."\n";
+                            fwrite( $stream, $line );
                         }
                     }
                     fclose($fh);
                     if ($lastline) { // last line not empty
-                        $logline = explode("\t", $lastline);
-                        $lastdate = intval($logline[0]);
-                        $lastaction = $logline[2];
+                        $lastlinearray = explode("\t", $lastline);
+                        $lastdate = intval($lastlinearray[0]);
+                        $lastaction = $lastlinearray[2];
                     }
                 }
                 if (is_file($datafile)) {
                     $datadate = filemtime($datafile);
                     // there's a newer external edit on the media
                     // fake a logline for later process
-                    if ($datadate > $lastdate) {
+                    if (!$lastline || ($datadate > $lastdate)) {
                         $logline = array(  // fake a logline
                             'date'  => $datadate,
                             'ip'    => '127.0.0.1',
@@ -318,10 +314,10 @@ class git_importer {
                         fwrite( $stream, $line );
                     }
                     // media is latest revision, replace attic, which might not exist
-                    else if ($datadate == $lastdate) {
+                    else if ($lastline && ($datadate == $lastdate)) {
                         fseek( $stream, -strlen($lastline), SEEK_CUR );  // back to previous line
-                        $logline[8] = "media"."\n";  // modify the data-type field
-                        $line = implode("\t", $logline);  // already has linefeed, don't append
+                        $lastlinearray[8] = "media"."\n";  // modify the data-type field
+                        $line = implode("\t", $lastlinearray);  // already has linefeed, don't append
                         fwrite( $stream, $line );
                     }
                 }
@@ -329,7 +325,7 @@ class git_importer {
                     // media is deleted externally after the latest wiki-edit
                     // fake a logline with action type "delete" for later process
                     // exact time is impossible to determine, pretend $lastdate + 1 (to sort after)
-                    if ($lastaction != "" && $lastaction != "D") {
+                    if ($lastline && ($lastaction != "D")) {
                         $logline = array(
                             'date'  => $lastdate + 1,
                             'ip'    => '127.0.0.1',
