@@ -207,17 +207,18 @@ class git_importer {
                 if (is_file($metafile)) {
                     $fh = fopen($metafile, "rb");
                     while (!feof($fh)) {
-                        $line = rtrim(fgets($fh), "\r\n");
-                        if ($line) {
-                            $lastline = $line = $line."\t".$id."\t"."attic"."\n";
-                            fwrite( $stream, $line );
+                        $logline = rtrim(fgets($fh), "\r\n");
+                        if ($logline) {
+                            $lastlogline = $logline;
+                            $lastline = $this->packHistoryLine($logline, $id, "attic");
+                            fwrite( $stream, $lastline );
                         }
                     }
                     fclose($fh);
                     if ($lastline) { // last line not empty
-                        $lastlinearray = explode("\t", $lastline);
-                        $lastdate = intval($lastlinearray[0]);
-                        $lastaction = $lastlinearray[2];
+                        $logline = explode("\t", $lastlogline);
+                        $lastdate = intval($logline[0]);
+                        $lastaction = $logline[2];
                     }
                 }
                 if (is_file($datafile)) {
@@ -234,16 +235,14 @@ class git_importer {
                             'sum'   => $lang['external_edit'],
                             'extra' => ''
                         );
-                        $line = implode("\t", $logline);
-                        $line = $line."\t".$id."\t"."pages"."\n";
-                        fwrite( $stream, $line );
+                        $logline = $this->packHistoryLine($logline, $id, "pages");
+                        fwrite( $stream, $logline );
                     }
                     // page is latest revision, replace attic, which might not exist
                     else if ($lastline && ($datadate == $lastdate)) {
                         fseek( $stream, -strlen($lastline), SEEK_CUR );  // back to previous line
-                        $lastlinearray[8] = "pages"."\n";  // modify the data-type field
-                        $line = implode("\t", $lastlinearray);  // already has linefeed, don't append
-                        fwrite( $stream, $line );
+                        $logline = $this->packHistoryLine($lastlogline, $id, "pages");
+                        fwrite( $stream, $logline );
                     }
                 }
                 else {
@@ -260,9 +259,8 @@ class git_importer {
                             'sum'   => $lang['external_edit'],
                             'extra' => ''
                         );
-                        $line = implode("\t", $logline);
-                        $line = $line."\t".$id."\t"."pages"."\n";
-                        fwrite( $stream, $line );
+                        $logline = $this->packHistoryLine($logline, $id, "pages");
+                        fwrite( $stream, $logline );
                     }
                 }
             }
@@ -282,17 +280,18 @@ class git_importer {
                 if (is_file($metafile)) {
                     $fh = fopen($metafile, "rb");
                     while (!feof($fh)) {
-                        $line = rtrim(fgets($fh), "\r\n");
-                        if ($line) {
-                            $lastline = $line = $line."\t".$id."\t"."media_attic"."\n";
-                            fwrite( $stream, $line );
+                        $logline = rtrim(fgets($fh), "\r\n");
+                        if ($logline) {
+                            $lastlogline = $logline;
+                            $lastline = $this->packHistoryLine($logline, $id, "media_attic");
+                            fwrite( $stream, $lastline );
                         }
                     }
                     fclose($fh);
                     if ($lastline) { // last line not empty
-                        $lastlinearray = explode("\t", $lastline);
-                        $lastdate = intval($lastlinearray[0]);
-                        $lastaction = $lastlinearray[2];
+                        $logline = explode("\t", $lastlogline);
+                        $lastdate = intval($logline[0]);
+                        $lastaction = $logline[2];
                     }
                 }
                 if (is_file($datafile)) {
@@ -309,16 +308,14 @@ class git_importer {
                             'sum'   => $lang['external_edit'],
                             'extra' => ''
                         );
-                        $line = implode("\t", $logline);
-                        $line = $line."\t".$id."\t"."media"."\n";
-                        fwrite( $stream, $line );
+                        $logline = $this->packHistoryLine($logline, $id, "media");
+                        fwrite( $stream, $logline );
                     }
                     // media is latest revision, replace attic, which might not exist
                     else if ($lastline && ($datadate == $lastdate)) {
                         fseek( $stream, -strlen($lastline), SEEK_CUR );  // back to previous line
-                        $lastlinearray[8] = "media"."\n";  // modify the data-type field
-                        $line = implode("\t", $lastlinearray);  // already has linefeed, don't append
-                        fwrite( $stream, $line );
+                        $logline = $this->packHistoryLine($lastlogline, $id, "media");
+                        fwrite( $stream, $logline );
                     }
                 }
                 else {
@@ -335,9 +332,8 @@ class git_importer {
                             'sum'   => $lang['external_edit'],
                             'extra' => ''
                         );
-                        $line = implode("\t", $logline);
-                        $line = $line."\t".$id."\t"."media"."\n";
-                        fwrite( $stream, $line );
+                        $logline = $this->packHistoryLine($logline, $id, "media");
+                        fwrite( $stream, $logline );
                     }
                 }
             }
@@ -357,14 +353,8 @@ class git_importer {
             if (!$line) continue;
 
             // read info from a line
-            $logline = explode("\t", $line);
-            $data_type = array_pop($logline);
-            $id = array_pop($logline);
-            $date = $logline[0];
-            $ip = $logline[1];
-            $type = $logline[2];
-            $user = $logline[4];
-            $summary = $logline[5];
+            list( $logline, $data_id, $data_type, $data_extra) = $this->unpackHistoryLine($line);
+            list( $date, $ip, $type, $id, $user, $summary, $extra ) = $logline;
 
             // Do not record a log for external edits
             // since they are not edited via the wiki system
@@ -384,7 +374,7 @@ class git_importer {
             switch ($data_type) {
                 case "pages":
                 case "attic":
-                    $item = wikiFN($id, '', false);
+                    $item = wikiFN($data_id, '', false);
                     $file = $this->temp_dir.'/'.substr( $item, $base_cut );
                     io_mkdir_p(dirname($file));
                     if ($type == 'D') {
@@ -395,12 +385,12 @@ class git_importer {
                             ));
                         $message = str_replace(
                             array('%page%', '%summary%', '%user%'),
-                            array($id, $summary, $user),
+                            array($data_id, $summary, $user),
                             $this->getConf('commitPageMsgDel')
                         );
                     }
                     else {
-                        $datafile = ($data_type=='pages') ? $item : wikiFN($id, $date, false);
+                        $datafile = ($data_type=='pages') ? $item : wikiFN($data_id, $date, false);
                         if (is_file($datafile)) {
                             file_put_contents($file, io_readFile($datafile, false));
                             $repo->git('add', array(
@@ -409,14 +399,14 @@ class git_importer {
                         }
                         $message = str_replace(
                             array('%page%', '%summary%', '%user%'),
-                            array($id, $summary, $user),
+                            array($data_id, $summary, $user),
                             $this->getConf('commitPageMsg')
                         );
                     }
                     break;
                 case "media":
                 case "media_attic":
-                    $item = mediaFN($id, '');
+                    $item = mediaFN($data_id, '');
                     $file = $this->temp_dir.'/'.substr( $item, $base_cut );
                     io_mkdir_p(dirname($file));
                     if ($type == 'D') {
@@ -427,12 +417,12 @@ class git_importer {
                             ));
                         $message = str_replace(
                             array('%media%', '%user%'),
-                            array($id, $user),
+                            array($data_id, $user),
                             $this->getConf('commitMediaMsgDel')
                         );
                     }
                     else {
-                        $datafile = ($data_type=='media') ? $item : mediaFN($id, $date);
+                        $datafile = ($data_type=='media') ? $item : mediaFN($data_id, $date);
                         if (is_file($datafile)) {
                             copy($datafile, $file);
                             $repo->git('add', array(
@@ -441,7 +431,7 @@ class git_importer {
                         }
                         $message = str_replace(
                             array('%media%', '%user%'),
-                            array($id, $user),
+                            array($data_id, $user),
                             $this->getConf('commitMediaMsg')
                         );
                     }
@@ -466,6 +456,38 @@ class git_importer {
     private function getConf($setting, $notset=false) {
         $my =& plugin_load('helper', 'gitbacked_git');
         return $my->getConf($setting, $notset);
+    }
+
+    /**
+     * Packs information into a single history line
+     *
+     * @param  mixed   the original dokuwiki logline, array or string, with or without a linefeed
+     * @param  string  the resource id to access
+     * @param  string  the resource type
+     * @param  string  additional information such as hidden
+     * @return string  an entry line, with linefeed
+     */
+    private function packHistoryLine($logline, $data_id="", $data_type="", $data_extra="") {
+        if (is_array($logline)) $logline = implode("\t", $logline);
+        $logline = rtrim($logline, "\r\n");
+        $packed = array($logline, $data_id, $data_type, $data_extra);
+        return implode("\t", $packed)."\n";
+    }
+
+    /**
+     * Unpacks information from a single history line
+     *
+     * @param  string  a line packed by packHistoryLine, with or without a linefeed
+     * @return array   array(array $logline, string $data_id, string $data_type, string $data_extra)
+     */
+    private function unpackHistoryLine($packed) {
+        $packed = rtrim($packed, "\r\n");
+        $unpacked = explode("\t", $packed);
+        $data_extra = array_pop($unpacked);
+        $data_type = array_pop($unpacked);
+        $data_id = array_pop($unpacked);
+        $logline = $unpacked;
+        return array($logline, $data_id, $data_type, $data_extra);
     }
 
 }
