@@ -89,14 +89,16 @@ class helper_plugin_gitbacked_git extends DokuWiki_Plugin {
         }
 
         $status = trim(proc_close($resource));
-        if ($status) throw new Exception($stderr);
+        if ($status) {
+            print "on system command: $command"."\n";
+            throw new Exception($stderr);
+        }
 
         return $stdout;
     }
 
     function cmd_git($command) {
         $command = $this->git_bin." ".$command;
-        print $command."\n";  // for debug
         return $this->cmd($command);
     }
 

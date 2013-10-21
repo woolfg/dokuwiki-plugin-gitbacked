@@ -9,7 +9,7 @@ require_once DOKU_INC.'inc/cliopts.php';
 
 // handle options
 $short_opts = 'hr';
-$long_opts  = array('help', 'run', 'git-dir=', 'branch=');
+$long_opts  = array('help', 'run', 'git-dir=', 'branch=', 'quiet');
 
 $OPTS = Doku_Cli_Opts::getOptions(__FILE__, $short_opts, $long_opts);
 
@@ -36,6 +36,11 @@ if ( $OPTS->has('branch') ) {
     $importer->git_branch = getSuppliedArgument($OPTS, null, 'branch');
 }
 
+// handle '--quiet' option
+if ( $OPTS->has('quiet') ) {
+    $importer->quiet = true;
+}
+
 // handle '--run' option
 if ( $OPTS->has('r') or $OPTS->has('run') ) {
     $importer->import();
@@ -52,6 +57,7 @@ function usage() {
         -r, --run      run importer
         --git-dir      defines the git repo path (overwrites $conf['repoPath'])
         --branch       defines the git branch to import (overwrites $conf['gitBranch'])
+        --quiet        do not output message during processing
 
 EOF;
 }
@@ -75,12 +81,12 @@ class git_importer {
 
     function import() {
         global $conf, $lang;
-        print 'start import'.DOKU_LF;
+        print 'start import'."\n";
 
         // acquire a lock, or exit
         $lock = $this->temp_dir.'/lock';
         if (!@mkdir($lock, $conf['dmode'], true)) {
-            print 'another instance of importer is running, exit'.DOKU_LF;
+            print 'another instance of importer is running, exit'."\n";
             exit(1);
         }
 
@@ -89,6 +95,7 @@ class git_importer {
         $repo->setGitRepo($this->git_dir, $this->temp_dir, $this->git_branch);
 
         // collect history
+        print 'collecting history...'."\n";
 
         // search and record all page-ids and media-ids
         $pagelist = $this->temp_dir.'/pagelist.txt';
@@ -114,15 +121,17 @@ class git_importer {
         ));
 
         // import from history list
+        print 'start import...'."\n";
         $this->importHistory($repo, $historylist);
 
         // unlock, clean, and done
+        print 'clean up...'."\n";
         @rmdir($lock);
         passthru(sprintf(
             'rm -rf %s',
             escapeshellarg($this->temp_dir)
         ));
-        print 'done.'.DOKU_LF;
+        print 'done.'."\n";
     }
 
     private function getPageList($listfile) {
@@ -226,7 +235,7 @@ class git_importer {
         while (!feof($lh)) {
             $id = rtrim(fgets($lh), "\r\n");
             if ($id) {
-                print "collecting history of page `$id'"."\n";
+                if (!$this->quiet) print "collecting history of page `$id'"."\n";
                 $datafile = wikiFN($id, '', false);
                 $metafile = metaFN($id, '.changes');
                 $metafile2 = $this->backup->metaFN($id, '.changes');
@@ -347,7 +356,7 @@ class git_importer {
         while (!feof($lh)) {
             $id = rtrim(fgets($lh), "\r\n");
             if ($id) {
-                print "collecting history of media `$id'"."\n";
+                if (!$this->quiet) print "collecting history of media `$id'"."\n";
                 $datafile = mediaFN($id);
                 $metafile = mediaMetaFN($id, '.changes');
                 $metafile2 = $this->backup->mediaMetaFN($id, '.changes');
@@ -492,6 +501,8 @@ class git_importer {
             //   $summary: false positive if someone writes a summary identical to "external edit"
             //             false negative if edited under a different language pack
             $external_edit = ($ip == '127.0.0.1' && !$user);
+
+            if (!$this->quiet) print "importing from `$data_type': `$data_id'"."\n";
 
             // add data to commit
             switch ($data_type) {
