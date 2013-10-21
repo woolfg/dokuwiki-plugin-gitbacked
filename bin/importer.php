@@ -70,6 +70,7 @@ class git_importer {
         global $conf;
         $this->temp_dir = $conf['tmpdir'].'/gitbacked/importer';
         io_mkdir_p($this->temp_dir);
+        $this->backup =& plugin_load('helper', 'gitbacked_backup');
     }
 
     function import() {
@@ -352,6 +353,9 @@ class git_importer {
             $line = rtrim(fgets($hh), "\r\n");
             if (!$line) continue;
 
+            // reset commands
+            $commands = array();
+
             // read info from a line
             list( $logline, $data_id, $data_type, $data_extra) = $this->unpackHistoryLine($line);
             list( $date, $ip, $type, $id, $user, $summary, $extra ) = $logline;
@@ -391,6 +395,12 @@ class git_importer {
                     }
                     else {
                         $datafile = ($data_type=='pages') ? $item : wikiFN($data_id, $date, false);
+                        // history entry exist, data missing?
+                        // or hidden if found in the backup directory
+                        if (!is_file($datafile)) {
+                            $datafile = $this->backup->wikiFN($id, $date, false);
+                            if (is_file($datafile)) $commands[] = "hide data";
+                        }
                         if (is_file($datafile)) {
                             file_put_contents($file, io_readFile($datafile, false));
                             $repo->git('add', array(
@@ -423,6 +433,12 @@ class git_importer {
                     }
                     else {
                         $datafile = ($data_type=='media') ? $item : mediaFN($data_id, $date);
+                        // history entry exist, data missing?
+                        // or hidden if found in the backup directory
+                        if (!is_file($datafile)) {
+                            $datafile = $this->backup->mediaFN($id, $date);
+                            if (is_file($datafile)) $commands[] = "hide data";
+                        }
                         if (is_file($datafile)) {
                             copy($datafile, $file);
                             $repo->git('add', array(

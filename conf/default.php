@@ -12,6 +12,7 @@ $conf['commitPageMsg'] = 'Wiki page %page% changed with summary [%summary%] by %
 $conf['commitPageMsgDel'] = 'Wiki page %page% deleted with reason [%summary%] by %user%';
 $conf['commitMediaMsg'] = 'Wiki media %media% uploaded by %user%';
 $conf['commitMediaMsgDel'] = 'Wiki media %media% deleted by %user%';
+$conf['backupSuffix'] = '.bak';
 $conf['gitPath'] = '/usr/bin/git';
 $conf['repoPath'] = $GLOBALS['conf']['savedir'];
 $conf['repoWorkDir'] = $GLOBALS['conf']['savedir'];
