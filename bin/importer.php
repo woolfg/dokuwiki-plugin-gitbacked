@@ -220,56 +220,77 @@ class git_importer {
 
     private function processPageList($listfile, $stream) {
         global $lang;
+        $tmpfile = $this->temp_dir.'/changes.txt.tmp';
+        $tmpfilesort = $this->temp_dir.'/changes.txt';
         $lh = fopen($listfile, 'rb');
         while (!feof($lh)) {
             $id = rtrim(fgets($lh), "\r\n");
             if ($id) {
+                print "collecting history of page `$id'"."\n";
                 $datafile = wikiFN($id, '', false);
                 $metafile = metaFN($id, '.changes');
                 $metafile2 = $this->backup->metaFN($id, '.changes');
-                $lastline = null;
-                $lastline2 = null;
-                // read meta
+
+                // read meta and meta.bak
+                $th = fopen($tmpfile, 'wb');
                 if (is_file($metafile)) {
                     $fh = fopen($metafile, "rb");
                     while (!feof($fh)) {
                         $logline = rtrim(fgets($fh), "\r\n");
                         if ($logline) {
-                            $lastlogline = $logline;
-                            $lastline = $this->packHistoryLine($logline, $id, "attic");
-                            fwrite( $stream, $lastline );
+                            $logline = $this->packHistoryLine($logline, $id, "attic");
+                            fwrite( $th, $logline );
                         }
                     }
                     fclose($fh);
-                    if ($lastline) { // last line not empty
-                        $logline = explode("\t", $lastlogline);
-                        $lastdate = intval($logline[0]);
-                        $lastaction = $logline[2];
-                    }
                 }
                 if (is_file($metafile2)) {
                     $fh = fopen($metafile2, "rb");
                     while (!feof($fh)) {
                         $logline = rtrim(fgets($fh), "\r\n");
                         if ($logline) {
-                            $lastlogline2 = $logline;
-                            $lastline2 = $this->packHistoryLine($logline, $id, "attic", "hide");
-                            fwrite( $stream, $lastline2 );
+                            $logline = $this->packHistoryLine($logline, $id, "attic", "hide");
+                            fwrite( $th, $logline );
                         }
                     }
                     fclose($fh);
-                    if ($lastline2) { // last line not empty
-                        $logline = explode("\t", $lastlogline2);
-                        $lastdate2 = intval($logline[0]);
-                        $lastaction2 = $logline[2];
-                        if (!$lastline || ($lastdate2>$lastdate)) {
-                            $lastline = $lastline2;
-                            $lastlogline = $lastlogline2;
-                            $lastdate = $lastdate2;
-                            $lastaction = $lastaction2;
-                        }
-                    }
                 }
+                fclose($th);
+                // sort history entries, using shell command to prevent memory issue
+                passthru(sprintf(
+                    'sort -n %s >%s',
+                    escapeshellarg($tmpfile),
+                    escapeshellarg($tmpfilesort)
+                ));
+                // process the history entries
+                if (filesize($tmpfilesort)>0) {
+                    // record the last line
+                    $th = fopen($tmpfilesort, 'rb');
+                    // pos end-1 should be a linefeed, skip it
+                    fseek($th, -1, SEEK_END);
+                    // look back until reaching the 2nd-last linefeed
+                    while (fseek($th, -1, SEEK_CUR) === 0) {
+                        $char = fread($th, 1);
+                        if ($char == "\n") break;
+                        fseek($th, -1, SEEK_CUR);
+                    }
+                    // now we are after the linefeed or at file start
+                    $lastline = fgets($th);
+                    list( $logline, $data_id, $data_type, $data_extra) = $this->unpackHistoryLine($lastline);
+                    $lastlogline = $logline;
+                    $lastdate = intval($logline[0]);
+                    $lastaction = $logline[2];
+                    // write to the stream
+                    rewind($th);
+                    while (!feof($th)) {
+                        fwrite($stream, fgets($th));
+                    }
+                    fclose($th);
+                }
+                else {
+                    $lastline = null;
+                }
+
                 // read pages
                 if (is_file($datafile)) {
                     $datadate = filemtime($datafile);
@@ -320,30 +341,78 @@ class git_importer {
 
     private function processMediaList($listfile, $stream) {
         global $lang;
+        $tmpfile = $this->temp_dir.'/changes.txt.tmp';
+        $tmpfilesort = $this->temp_dir.'/changes.txt';
         $lh = fopen($listfile, 'rb');
         while (!feof($lh)) {
             $id = rtrim(fgets($lh), "\r\n");
             if ($id) {
+                print "collecting history of media `$id'"."\n";
                 $datafile = mediaFN($id);
                 $metafile = mediaMetaFN($id, '.changes');
-                $lastline = null;
+                $metafile2 = $this->backup->mediaMetaFN($id, '.changes');
+
+                // read media_meta and media_meta.bak
+                $th = fopen($tmpfile, 'wb');
                 if (is_file($metafile)) {
                     $fh = fopen($metafile, "rb");
                     while (!feof($fh)) {
                         $logline = rtrim(fgets($fh), "\r\n");
                         if ($logline) {
-                            $lastlogline = $logline;
-                            $lastline = $this->packHistoryLine($logline, $id, "media_attic");
-                            fwrite( $stream, $lastline );
+                            $logline = $this->packHistoryLine($logline, $id, "media_attic");
+                            fwrite( $th, $logline );
                         }
                     }
                     fclose($fh);
-                    if ($lastline) { // last line not empty
-                        $logline = explode("\t", $lastlogline);
-                        $lastdate = intval($logline[0]);
-                        $lastaction = $logline[2];
-                    }
                 }
+                if (is_file($metafile2)) {
+                    $fh = fopen($metafile2, "rb");
+                    while (!feof($fh)) {
+                        $logline = rtrim(fgets($fh), "\r\n");
+                        if ($logline) {
+                            $logline = $this->packHistoryLine($logline, $id, "media_attic", "hide");
+                            fwrite( $th, $logline );
+                        }
+                    }
+                    fclose($fh);
+                }
+                fclose($th);
+                // sort history entries, using shell command to prevent memory issue
+                passthru(sprintf(
+                    'sort -n %s >%s',
+                    escapeshellarg($tmpfile),
+                    escapeshellarg($tmpfilesort)
+                ));
+                // process the history entries
+                if (filesize($tmpfilesort)>0) {
+                    // record the last line
+                    $th = fopen($tmpfilesort, 'rb');
+                    // pos end-1 should be a linefeed, skip it
+                    fseek($th, -1, SEEK_END);
+                    // look back until reaching the 2nd-last linefeed
+                    while (fseek($th, -1, SEEK_CUR) === 0) {
+                        $char = fread($th, 1);
+                        if ($char == "\n") break;
+                        fseek($th, -1, SEEK_CUR);
+                    }
+                    // now we are after the linefeed or at file start
+                    $lastline = fgets($th);
+                    list( $logline, $data_id, $data_type, $data_extra) = $this->unpackHistoryLine($lastline);
+                    $lastlogline = $logline;
+                    $lastdate = intval($logline[0]);
+                    $lastaction = $logline[2];
+                    // write to the stream
+                    rewind($th);
+                    while (!feof($th)) {
+                        fwrite($stream, fgets($th));
+                    }
+                    fclose($th);
+                }
+                else {
+                    $lastline = null;
+                }
+
+                // read media
                 if (is_file($datafile)) {
                     $datadate = filemtime($datafile);
                     // there's a newer external edit on the media
