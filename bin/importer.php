@@ -141,6 +141,17 @@ class git_importer {
             $id = substr($item['id'], 0, -8);  // strip '.changes'
             fwrite( $lh, $id."\n" );
         }
+        // meta.bak
+        $data = array();
+        search($data, $this->backup->conf('metadir'), 'search_universal', array(
+            'listfiles' => true,
+            'skipacl' => true,
+            'filematch' => '.*\.changes'
+            ));
+        foreach($data as $item) {
+            $id = substr($item['id'], 0, -8);  // strip '.changes'
+            fwrite( $lh, $id."\n" );
+        }
         // pages
         $data = array();
         search($data, $conf['datadir'], 'search_universal', array(
@@ -177,6 +188,17 @@ class git_importer {
             $id = substr($item['id'], 0, -8);  // strip '.changes'
             fwrite( $lh, $id."\n" );
         }
+        // media_meta.bak
+        $data = array();
+        search($data, $this->backup->conf('mediametadir'), 'search_universal', array(
+            'listfiles' => true,
+            'skipacl' => true,
+            'filematch' => '.*\.changes'
+            ));
+        foreach($data as $item) {
+            $id = substr($item['id'], 0, -8);  // strip '.changes'
+            fwrite( $lh, $id."\n" );
+        }
         // media
         $data = array();
         search($data, $conf['mediadir'], 'search_universal', array(
@@ -204,7 +226,10 @@ class git_importer {
             if ($id) {
                 $datafile = wikiFN($id, '', false);
                 $metafile = metaFN($id, '.changes');
+                $metafile2 = $this->backup->metaFN($id, '.changes');
                 $lastline = null;
+                $lastline2 = null;
+                // read meta
                 if (is_file($metafile)) {
                     $fh = fopen($metafile, "rb");
                     while (!feof($fh)) {
@@ -222,6 +247,30 @@ class git_importer {
                         $lastaction = $logline[2];
                     }
                 }
+                if (is_file($metafile2)) {
+                    $fh = fopen($metafile2, "rb");
+                    while (!feof($fh)) {
+                        $logline = rtrim(fgets($fh), "\r\n");
+                        if ($logline) {
+                            $lastlogline2 = $logline;
+                            $lastline2 = $this->packHistoryLine($logline, $id, "attic", "hide");
+                            fwrite( $stream, $lastline2 );
+                        }
+                    }
+                    fclose($fh);
+                    if ($lastline2) { // last line not empty
+                        $logline = explode("\t", $lastlogline2);
+                        $lastdate2 = intval($logline[0]);
+                        $lastaction2 = $logline[2];
+                        if (!$lastline || ($lastdate2>$lastdate)) {
+                            $lastline = $lastline2;
+                            $lastlogline = $lastlogline2;
+                            $lastdate = $lastdate2;
+                            $lastaction = $lastaction2;
+                        }
+                    }
+                }
+                // read pages
                 if (is_file($datafile)) {
                     $datadate = filemtime($datafile);
                     // there's a newer external edit on the page
@@ -343,9 +392,10 @@ class git_importer {
     }
 
     private function importHistory($repo, $historyfile) {
-        // basic settings
+        // common settings
         $base = DOKU_INC.$this->getConf('repoWorkDir');
         $base_cut = strlen($base) - 1;
+        $histmeta =& plugin_load('helper', 'gitbacked_histmeta');
 
         // read history entries line by line and process them
         $hh = fopen($historyfile, "rb");
@@ -453,10 +503,10 @@ class git_importer {
                     }
                     break;
             }
+            if ($data_extra == 'hide') $commands[] = 'hide change';
+            if ($external_edit) $logline = "";
 
             // now commit
-            $histmeta =& plugin_load('helper', 'gitbacked_histmeta');
-            if ($external_edit) $logline = "";
             $commit_message = $histmeta->pack($message, $logline, $commands);
             $commit_date = $date;
             $repo->git('commit', array(
