@@ -211,7 +211,7 @@ class git_importer {
                     while (!feof($fh)) {
                         $line = rtrim(fgets($fh), "\r\n");
                         if ($line) {
-                            $lastline = $line."\t"."attic"."\t".$id."\n";
+                            $lastline = $line."\t".$id."\t"."attic"."\n";
                             fwrite( $stream, $lastline );
                         }
                     }
@@ -237,13 +237,13 @@ class git_importer {
                             'extra' => ''
                         );
                         $line = implode("\t", $logline);
-                        $line = $line."\t"."pages"."\t".$id."\n";
+                        $line = $line."\t".$id."\t"."pages"."\n";
                         fwrite( $stream, $line );
                     }
                     // page is latest revision, replace attic, which might not exist
                     else if ($datadate == $lastdate) {
                         fseek( $stream, -strlen($lastline), SEEK_CUR );  // back to previous line
-                        $logline[7] = "pages";  // modify the data-type field
+                        $logline[8] = "pages"."\n";  // modify the data-type field
                         $line = implode("\t", $logline);  // already has linefeed, don't append
                         fwrite( $stream, $line );
                     }
@@ -263,7 +263,7 @@ class git_importer {
                             'extra' => ''
                         );
                         $line = implode("\t", $logline);
-                        $line = $line."\t"."pages"."\t".$id."\n";
+                        $line = $line."\t".$id."\t"."pages"."\n";
                         fwrite( $stream, $line );
                     }
                 }
@@ -288,7 +288,7 @@ class git_importer {
                     while (!feof($fh)) {
                         $line = rtrim(fgets($fh), "\r\n");
                         if ($line) {
-                            $lastline = $line."\t"."media_attic"."\t".$id."\n";
+                            $lastline = $line."\t".$id."\t"."media_attic"."\n";
                             fwrite( $stream, $lastline );
                         }
                     }
@@ -314,13 +314,13 @@ class git_importer {
                             'extra' => ''
                         );
                         $line = implode("\t", $logline);
-                        $line = $line."\t"."media"."\t".$id."\n";
+                        $line = $line."\t".$id."\t"."media"."\n";
                         fwrite( $stream, $line );
                     }
                     // media is latest revision, replace attic, which might not exist
                     else if ($datadate == $lastdate) {
                         fseek( $stream, -strlen($lastline), SEEK_CUR );  // back to previous line
-                        $logline[7] = "media";  // modify the data-type field
+                        $logline[8] = "media"."\n";  // modify the data-type field
                         $line = implode("\t", $logline);  // already has linefeed, don't append
                         fwrite( $stream, $line );
                     }
@@ -340,7 +340,7 @@ class git_importer {
                             'extra' => ''
                         );
                         $line = implode("\t", $logline);
-                        $line = $line."\t"."media"."\t".$id."\n";
+                        $line = $line."\t".$id."\t"."media"."\n";
                         fwrite( $stream, $line );
                     }
                 }
@@ -362,8 +362,8 @@ class git_importer {
 
             // read info from a line
             $logline = explode("\t", $line);
-            $id = array_pop($logline);
             $data_type = array_pop($logline);
+            $id = array_pop($logline);
             $date = $logline[0];
             $ip = $logline[1];
             $type = $logline[2];
