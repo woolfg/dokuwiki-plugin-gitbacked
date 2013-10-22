@@ -512,11 +512,7 @@ class git_importer {
                     $file = $this->temp_dir.'/'.substr( $item, $base_cut );
                     io_mkdir_p(dirname($file));
                     if ($type == 'D') {
-                        $repo->git('rm', array(
-                            'cached' => null,
-                            'ignore-unmatch' => null,
-                            '' => $file
-                            ));
+                        $repo->git('rm --cached --ignore-unmatch -- '.escapeshellarg($file));
                         $message = str_replace(
                             array('%page%', '%summary%', '%user%'),
                             array($data_id, $summary, $user),
@@ -533,9 +529,7 @@ class git_importer {
                         }
                         if (is_file($datafile)) {
                             file_put_contents($file, io_readFile($datafile, false));
-                            $repo->git('add', array(
-                                '' => $file
-                                ));
+                            $repo->git('add -- '.escapeshellarg($file));
                         }
                         $message = str_replace(
                             array('%page%', '%summary%', '%user%'),
@@ -550,11 +544,7 @@ class git_importer {
                     $file = $this->temp_dir.'/'.substr( $item, $base_cut );
                     io_mkdir_p(dirname($file));
                     if ($type == 'D') {
-                        $repo->git('rm', array(
-                            'cached' => null,
-                            'ignore-unmatch' => null,
-                            '' => $file
-                            ));
+                        $repo->git('rm --cached --ignore-unmatch -- '.escapeshellarg($file));
                         $message = str_replace(
                             array('%media%', '%user%'),
                             array($data_id, $user),
@@ -571,9 +561,7 @@ class git_importer {
                         }
                         if (is_file($datafile)) {
                             copy($datafile, $file);
-                            $repo->git('add', array(
-                                '' => $file
-                                ));
+                            $repo->git('add -- '.escapeshellarg($file));
                         }
                         $message = str_replace(
                             array('%media%', '%user%'),
@@ -589,11 +577,7 @@ class git_importer {
             // now commit
             $commit_message = $histmeta->pack($message, $logline, $commands);
             $commit_date = $date;
-            $repo->git('commit', array(
-                'allow-empty' => null,
-                'm' => $commit_message,
-                'date' => $commit_date
-                ));
+            $repo->git('commit --allow-empty -m '.escapeshellarg($commit_message).' --date '.escapeshellarg($commit_date));
         }
         fclose($hh);
     }

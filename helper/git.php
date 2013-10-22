@@ -63,11 +63,11 @@ class helper_plugin_gitbacked_git extends DokuWiki_Plugin {
             if (array_search("* $branch", $list) === false) {
                 // not exist --> make an orphan
                 if (array_search($branch, $list) === false) {
-                    $this->cmd_git('checkout --force --orphan '.escapeshellarg($branch));
+                    $this->git('checkout --force --orphan '.escapeshellarg($branch));
                 }
                 // exist, not active --> checkout
                 else {
-                    $this->cmd_git('checkout --force '.escapeshellarg($branch));
+                    $this->git('checkout --force '.escapeshellarg($branch));
                 }
             }
         }
@@ -97,17 +97,9 @@ class helper_plugin_gitbacked_git extends DokuWiki_Plugin {
         return $stdout;
     }
 
-    function cmd_git($command) {
+    function git($command) {
         $command = $this->git_bin." ".$command;
         return $this->cmd($command);
-    }
-
-    function git($command, $params=array()) {
-        foreach ($params as $opt => $value) {
-            $command .= (strlen($opt) == 1) ? ' -'.$opt : ' --'.$opt;
-            if (!is_null($value)) $command .= ' '.escapeshellarg($value);
-        }
-        return $this->cmd_git($command);
     }
 
     function list_branches($keep_asterisk = false) {
