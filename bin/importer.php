@@ -276,14 +276,14 @@ class git_importer {
                     // record the last line
                     $th = fopen($tmpfilesort, 'rb');
                     // pos end-1 should be a linefeed, skip it
-                    fseek($th, -1, SEEK_END);
-                    // look back until reaching the 2nd-last linefeed
-                    while (fseek($th, -1, SEEK_CUR) === 0) {
-                        $char = fread($th, 1);
-                        if ($char == "\n") break;
-                        fseek($th, -1, SEEK_CUR);
+                    // look back for 2nd-last linefeed or file start
+                    for($x=-2; ; $x--) {
+                        if (fseek($th, $x, SEEK_END) === -1) {
+                            rewind($th);  // reset pointer in case 1 due to last fget()
+                            break;
+                        }
+                        if (fgetc($th) == "\n") break;
                     }
-                    // now we are after the linefeed or at file start
                     $lastline = fgets($th);
                     list( $logline, $data_id, $data_type, $data_extra) = $this->unpackHistoryLine($lastline);
                     $lastlogline = $logline;
@@ -397,14 +397,14 @@ class git_importer {
                     // record the last line
                     $th = fopen($tmpfilesort, 'rb');
                     // pos end-1 should be a linefeed, skip it
-                    fseek($th, -1, SEEK_END);
-                    // look back until reaching the 2nd-last linefeed
-                    while (fseek($th, -1, SEEK_CUR) === 0) {
-                        $char = fread($th, 1);
-                        if ($char == "\n") break;
-                        fseek($th, -1, SEEK_CUR);
+                    // look back for 2nd-last linefeed or file start
+                    for($x=-2; ; $x--) {
+                        if (fseek($th, $x, SEEK_END) === -1) {
+                            rewind($th);  // reset pointer in case 1 due to last fget()
+                            break;
+                        }
+                        if (fgetc($th) == "\n") break;
                     }
-                    // now we are after the linefeed or at file start
                     $lastline = fgets($th);
                     list( $logline, $data_id, $data_type, $data_extra) = $this->unpackHistoryLine($lastline);
                     $lastlogline = $logline;
