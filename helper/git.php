@@ -20,11 +20,12 @@ class helper_plugin_gitbacked_git extends DokuWiki_Plugin {
      *
      * @param  string   git repository path, use conf by default (relative to dokuwiki dir)
      * @param  string   git working tree, use conf by default (relative to dokuwiki dir)
-     * @param  string   switch to the git branch if given
+     * @param  string   switch to the git branch if given, use conf by default
+     * @param  string   extra git params if given, use conf by default
      * @param  bool     if true, create a git repo if not exist
      * @param  string   if true, create an .htaccess for the git repo dir if not exist
      */
-    function setGitRepo($repo_path=null, $work_tree=null, $branch=null, $create_new=true, $protect=true) {
+    function setGitRepo($repo_path=null, $work_tree=null, $branch=null, $extra_params=null, $create_new=true, $protect=true) {
         // set repo path
         $this->repo_path = !empty($repo_path) ? $repo_path : DOKU_INC.$this->getConf('repoPath');
         if (!is_dir($this->repo_path.'/.git')) {
@@ -51,10 +52,14 @@ class helper_plugin_gitbacked_git extends DokuWiki_Plugin {
         io_mkdir_p($this->work_tree);
         $this->work_tree = realpath($this->work_tree);
 
+        // set extra params
+        $this->extra_params = !empty($extra_params) ? $extra_params : $this->getConf('addParams');
+
         // set git_bin
         $this->git_bin = escapeshellarg($this->git_path).
             ' --git-dir '.escapeshellarg($this->repo_path.'/.git').
             ' --work-tree '.escapeshellarg($this->work_tree);
+        if (!empty($this->extra_params)) $this->git_bin .= ' '.$this->extra_params;
 
         // switch branch
         if (!$branch) $branch = $this->getConf('gitBranch');
