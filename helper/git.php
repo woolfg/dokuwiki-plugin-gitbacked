@@ -9,6 +9,14 @@ class helper_plugin_gitbacked_git extends DokuWiki_Plugin {
     }
 
     /**
+     * Returns the git command path
+     * can be used to check whether a git repo is defined
+     */
+    function getGitRepo() {
+        return $this->git_bin;
+    }
+
+    /**
      * Redefines the git bin path
      */
     function setGitPath($git_path) {
