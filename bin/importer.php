@@ -84,8 +84,8 @@ class git_importer {
         print 'start import'."\n";
 
         // acquire a lock, or exit
-        $lock = $this->temp_dir.'/lock';
-        if (!@mkdir($lock, $conf['dmode'], true)) {
+        $lock = fopen($this->temp_dir.'.lockfile', 'w+');
+        if (!flock($lock, LOCK_EX | LOCK_NB)) {
             print 'another instance of importer is running, exit'."\n";
             exit(1);
         }
@@ -126,12 +126,13 @@ class git_importer {
 
         // unlock, clean, and done
         print 'clean up...'."\n";
-        @rmdir($lock);
         passthru(sprintf(
             'rm -rf %s',
             escapeshellarg($this->temp_dir)
         ));
         print 'done.'."\n";
+        flock($lock, LOCK_UN);
+        @unlink($lock);
     }
 
     private function getPageList($listfile) {
