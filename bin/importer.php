@@ -489,20 +489,6 @@ class git_importer {
             list( $logline, $data_id, $data_type, $data_extra) = $this->unpackHistoryLine($line);
             list( $date, $ip, $type, $id, $user, $summary, $extra ) = $logline;
 
-            // Do not record a log for external edits
-            // since they are not edited via the wiki system
-            // 
-            // TODO: Improve external edit detection
-            //       Currently the protocol is not to produce false negative.
-            //       False positive only occurs on anonymous edits on the localhost server,
-            //       which should be very rare.
-            //
-            //   $ip:      false positive if edited on a localhost server
-            //   $user:    false positive if it's edited by an anonymous user
-            //   $summary: false positive if someone writes a summary identical to "external edit"
-            //             false negative if edited under a different language pack
-            $external_edit = ($ip == '127.0.0.1' && !$user);
-
             if (!$this->quiet) print "importing from `$data_type': `$data_id'"."\n";
 
             // add data to commit
@@ -573,7 +559,6 @@ class git_importer {
                     break;
             }
             if ($data_extra == 'hide') $commands[] = 'hide change';
-            if ($external_edit) $logline = "";
 
             // now commit
             $commit_message = $histmeta->pack($message, $logline, $commands);
