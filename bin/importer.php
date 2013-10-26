@@ -127,10 +127,7 @@ class git_importer {
 
         // unlock, clean, and done
         print 'clean up...'."\n";
-        passthru(sprintf(
-            'rm -rf %s',
-            escapeshellarg($this->temp_dir)
-        ));
+        $this->clearDir($this->temp_dir);
         print 'done.'."\n";
         flock($lock, LOCK_UN);
         @unlink($lockfile);
@@ -578,6 +575,22 @@ class git_importer {
     private function getConf($setting, $notset=false) {
         $my =& plugin_load('helper', 'gitbacked_git');
         return $my->getConf($setting, $notset);
+    }
+
+    private function clearDir($dir) {
+        $dh = @opendir($dir);
+        if($dh) {
+            while(($file = readdir($dh)) !== false){
+                if ($file{0}=='.') continue;
+                $subfile = $dir.'/'.$file;
+                if (is_file($subfile)) unlink($subfile);
+                else $this->clearDir($subfile);
+            }
+            closedir($dh);
+            rmdir($dir);
+            return true;
+        }
+        return false;
     }
 
     /**
