@@ -144,7 +144,7 @@ class git_importer {
         search($data, $conf['metadir'], 'search_universal', array(
             'listfiles' => true,
             'skipacl' => true,
-            'filematch' => '.*\.changes'
+            'filematch' => '\.changes$'
             ));
         foreach($data as $item) {
             $id = substr($item['id'], 0, -8);  // strip '.changes'
@@ -155,7 +155,7 @@ class git_importer {
         search($data, $this->backup->conf('metadir'), 'search_universal', array(
             'listfiles' => true,
             'skipacl' => true,
-            'filematch' => '.*\.changes'
+            'filematch' => '\.changes$'
             ));
         foreach($data as $item) {
             $id = substr($item['id'], 0, -8);  // strip '.changes'
@@ -191,7 +191,7 @@ class git_importer {
         search($data, $conf['mediametadir'], 'search_universal', array(
             'listfiles' => true,
             'skipacl' => true,
-            'filematch' => '.*\.changes'
+            'filematch' => '\.changes$'
             ));
         foreach($data as $item) {
             $id = substr($item['id'], 0, -8);  // strip '.changes'
@@ -202,7 +202,7 @@ class git_importer {
         search($data, $this->backup->conf('mediametadir'), 'search_universal', array(
             'listfiles' => true,
             'skipacl' => true,
-            'filematch' => '.*\.changes'
+            'filematch' => '\.changes$'
             ));
         foreach($data as $item) {
             $id = substr($item['id'], 0, -8);  // strip '.changes'
