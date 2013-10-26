@@ -77,6 +77,7 @@ class helper_plugin_gitbacked_git extends DokuWiki_Plugin {
                 // not exist --> make an orphan
                 if (array_search($branch, $list) === false) {
                     $this->git('checkout --force --orphan '.escapeshellarg($branch));
+                    $this->git('rm -rf --cached --ignore-unmatch -- .');
                 }
                 // exist, not active --> checkout
                 else {
