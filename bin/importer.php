@@ -74,6 +74,7 @@ class git_importer {
 
     function __construct() {
         global $conf;
+        $this->work_dir = realpath(DOKU_INC.$this->getConf('repoWorkDir'));
         $this->temp_dir = $conf['tmpdir'].'/gitbacked/importer';
         io_mkdir_p($this->temp_dir);
         $this->backup =& plugin_load('helper', 'gitbacked_backup');
@@ -472,8 +473,8 @@ class git_importer {
 
     private function importHistory($repo, $historyfile) {
         // common settings
-        $base = DOKU_INC.$this->getConf('repoWorkDir');
-        $base_cut = strlen($base) - 1;
+        $base = $this->work_dir;
+        $base_cut = strlen($base);
         $histmeta =& plugin_load('helper', 'gitbacked_histmeta');
 
         // read history entries line by line and process them
@@ -498,7 +499,7 @@ class git_importer {
                 case "attic":
                     $info[] = "page";
                     $item = wikiFN($data_id, '', false);
-                    $file = $this->temp_dir.'/'.substr( $item, $base_cut );
+                    $file = $this->temp_dir.substr($item, $base_cut);
                     io_mkdir_p(dirname($file));
                     if ($type == 'D') {
                         $repo->git('rm --cached --ignore-unmatch -- '.escapeshellarg($file));
@@ -531,7 +532,7 @@ class git_importer {
                 case "media_attic":
                     $info[] = "media";
                     $item = mediaFN($data_id, '');
-                    $file = $this->temp_dir.'/'.substr( $item, $base_cut );
+                    $file = $this->temp_dir.substr($item, $base_cut);
                     io_mkdir_p(dirname($file));
                     if ($type == 'D') {
                         $repo->git('rm --cached --ignore-unmatch -- '.escapeshellarg($file));
