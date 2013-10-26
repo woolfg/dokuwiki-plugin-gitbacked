@@ -598,14 +598,9 @@ class git_importer {
 
         // add meta
         $data = array();
-        search($data, $conf['metadir'], 'search_universal', array(
-            'listfiles' => true,
-            'skipacl' => true,
-            'filematch' => '(?<!\.changes|\.indexed|\.meta$)$'
-            ));
-        foreach($data as $item) {
-            $id = $item['id'];
-            $datafile = metaFN($id, '');
+        $this->getChildFiles($data, $conf['metadir'], '^(?!_).*(?<!\.changes|\.indexed|\.meta)$');
+        foreach($data as $datafile) {
+            if (!$this->quiet) print "add `$datafile'"."\n";
             $file = $this->temp_dir.substr($datafile, $base_cut);
             io_mkdir_p(dirname($file));
             copy($datafile, $file);
@@ -613,14 +608,9 @@ class git_importer {
             $lasttime = max($lasttime, intval(filemtime($datafile)));
         }
         $data = array();
-        search($data, $conf['mediametadir'], 'search_universal', array(
-            'listfiles' => true,
-            'skipacl' => true,
-            'filematch' => '(?<!\.changes|\.indexed|\.meta$)$'
-            ));
-        foreach($data as $item) {
-            $id = $item['id'];
-            $datafile = mediaMetaFN($id, '');
+        $this->getChildFiles($data, $conf['mediametadir'], '^(?!_).*(?<!\.changes|\.indexed|\.meta)$');
+        foreach($data as $datafile) {
+            if (!$this->quiet) print "add `$datafile'"."\n";
             $file = $this->temp_dir.substr($datafile, $base_cut);
             io_mkdir_p(dirname($file));
             copy($datafile, $file);
@@ -645,7 +635,7 @@ class git_importer {
         $dh = @opendir($dir);
         if($dh) {
             while(($file = readdir($dh)) !== false){
-                if ($file{0}=='.') continue;
+                if ($file=='.'||$file=='..') continue;
                 $subfile = $dir.'/'.$file;
                 if (is_file($subfile)) unlink($subfile);
                 else $this->clearDir($subfile);
@@ -655,6 +645,25 @@ class git_importer {
             return true;
         }
         return false;
+    }
+
+    private function getChildFiles(&$data=array(), $dir, $regex="") {
+        $dh = @opendir($dir);
+        if($dh) {
+            while(($file = readdir($dh)) !== false){
+                if ($file=='.'||$file=='..') continue;
+                $subfile = $dir.'/'.$file;
+                if (is_file($subfile)) {
+                    if (preg_match("/$regex/", $file)) {
+                        $data[] = $subfile;
+                    }
+                }
+                else {
+                    $this->getChildFiles($data, $subfile, $regex);
+                }
+            }
+            closedir($dh);
+        }
     }
 
     /**
