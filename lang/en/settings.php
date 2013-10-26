@@ -13,6 +13,7 @@ $lang['commitPageMsg'] = 'Commit message for page edits (%user%,%summary%,%page%
 $lang['commitPageMsgDel'] = 'Commit message for deleted pages (%user%,%summary%,%page% are replaced by the corresponding values)';
 $lang['commitMediaMsg'] = 'Commit message for media files (%user%,%media% are replaced by the corresponding values)';
 $lang['commitMediaMsgDel'] = 'Commit message for deleted media files (%user%,%media% are replaced by the corresponding values)';
+$lang['importMetaMsg'] = 'Commit message for meta update (git importer)';
 $lang['backupSuffix'] = 'Suffix of backup folders (to store hidden data or history).';
 $lang['gitPath'] = 'Full path of the git program';
 $lang['repoPath'] = 'Path of the git repo, relative to dokuwiki directory (e.g. the savedir '.$GLOBALS['conf']['savedir'].')';

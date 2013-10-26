@@ -9,7 +9,7 @@ require_once DOKU_INC.'inc/cliopts.php';
 
 // handle options
 $short_opts = 'hr';
-$long_opts  = array('help', 'run', 'git-dir=', 'branch=', 'quiet');
+$long_opts  = array('help', 'run', 'git-dir=', 'branch=', 'no-meta', 'quiet');
 
 $OPTS = Doku_Cli_Opts::getOptions(__FILE__, $short_opts, $long_opts);
 
@@ -36,6 +36,11 @@ if ( $OPTS->has('branch') ) {
     $importer->git_branch = getSuppliedArgument($OPTS, null, 'branch');
 }
 
+// handle '--no-meta' option
+if ( $OPTS->has('no-meta') ) {
+    $importer->no_meta = true;
+}
+
 // handle '--quiet' option
 if ( $OPTS->has('quiet') ) {
     $importer->quiet = true;
@@ -57,6 +62,7 @@ function usage() {
         -r, --run      run importer
         --git-dir      defines the git repo path (overwrites $conf['repoPath'])
         --branch       defines the git branch to import (overwrites $conf['gitBranch'])
+        --no-meta      do not import extra meta files to git (other than .changes, .meta, .indexed)
         --quiet        do not output message during processing
 
 EOF;
@@ -125,6 +131,12 @@ class git_importer {
         // import from history list
         print 'start import...'."\n";
         $this->importHistory($repo, $historylist);
+
+        // import other meta files
+        if (!$this->no_meta) {
+            print 'import extra meta files...'."\n";
+            $this->importMeta($repo);
+        }
 
         // unlock, clean, and done
         print 'clean up...'."\n";
@@ -570,6 +582,57 @@ class git_importer {
             $repo->git('commit --allow-empty -m '.escapeshellarg($commit_message).' --date '.escapeshellarg($commit_date));
         }
         fclose($hh);
+    }
+
+    private function importMeta($repo) {
+        global $conf;
+        $base = realpath($this->work_dir);
+        $base_cut = strlen($base);
+        $meta_short = substr($conf['metadir'], $base_cut+1);  // trim '/'
+        $mediameta_short = substr($conf['mediametadir'], $base_cut+1);  // trim '/'
+        $lasttime = 0;
+
+        // remove old meta
+        $repo->git('rm -rf --cached --ignore-unmatch -- '.escapeshellarg($meta_short.'/'));
+        $repo->git('rm -rf --cached --ignore-unmatch -- '.escapeshellarg($mediameta_short.'/'));
+
+        // add meta
+        $data = array();
+        search($data, $conf['metadir'], 'search_universal', array(
+            'listfiles' => true,
+            'skipacl' => true,
+            'filematch' => '(?<!\.changes|\.indexed|\.meta$)$'
+            ));
+        foreach($data as $item) {
+            $id = $item['id'];
+            $datafile = metaFN($id, '');
+            $file = $this->temp_dir.substr($datafile, $base_cut);
+            io_mkdir_p(dirname($file));
+            copy($datafile, $file);
+            $repo->git('add -- '.escapeshellarg($file));
+            $lasttime = max($lasttime, intval(filemtime($datafile)));
+        }
+        $data = array();
+        search($data, $conf['mediametadir'], 'search_universal', array(
+            'listfiles' => true,
+            'skipacl' => true,
+            'filematch' => '(?<!\.changes|\.indexed|\.meta$)$'
+            ));
+        foreach($data as $item) {
+            $id = $item['id'];
+            $datafile = mediaMetaFN($id, '');
+            $file = $this->temp_dir.substr($datafile, $base_cut);
+            io_mkdir_p(dirname($file));
+            copy($datafile, $file);
+            $repo->git('add -- '.escapeshellarg($file));
+            $lasttime = max($lasttime, intval(filemtime($datafile)));
+        }
+
+        // commit
+        if ($lasttime == 0) {
+            $lasttime = rtrim($repo->git('log --pretty=%at -n 1'), "\n");
+        }
+        $repo->git('commit --allow-empty -m '.escapeshellarg($this->getConf('importMetaMsg')).' --date '.escapeshellarg($lasttime));
     }
 
     // this script is not a true plugin, fake this method for convenience
