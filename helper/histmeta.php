@@ -22,10 +22,11 @@ class helper_plugin_gitbacked_histmeta extends DokuWiki_Plugin {
      *
      * @param   string  the cardinal commit summary for git
      * @param   mixed   string or array, a logline of a DokuWiki .changes entry, with linefeed or not
+     * @param   array   the info of commit
      * @param   array   extra commands for special usage
      * @return  string  the formatted string suitable for git commit
      */
-    function pack($message, $logline="", $commands=array()) {
+    function pack($message, $logline=array(), $info=array(), $commands=array()) {
         $packed = $message;
         if (is_string($logline)) {
             $logline = rtrim($logline, "\r\n");
@@ -39,7 +40,7 @@ class helper_plugin_gitbacked_histmeta extends DokuWiki_Plugin {
             }
         }
         if ($loglineempty) $logline = null;
-        if (!empty($logline) || !empty($commands)) {
+        if (!empty($info) || !empty($logline) || !empty($commands)) {
             $packed .= "\n\n~~dokuwiki~~\n";
             if (!empty($logline)) {
                 $packed .= "time    : $logline[0]\n";
@@ -49,6 +50,10 @@ class helper_plugin_gitbacked_histmeta extends DokuWiki_Plugin {
                 $packed .= "user    : $logline[4]\n";
                 $packed .= "summary : $logline[5]\n";
                 $packed .= "extra   : $logline[6]\n";
+            }
+            if (!empty($info)) {
+                $packed .= "info-id: $info[0]\n";
+                $packed .= "info-type: $info[1]\n";
             }
             if (!empty($commands)) {
                 foreach($commands as $cmd) {
@@ -63,7 +68,7 @@ class helper_plugin_gitbacked_histmeta extends DokuWiki_Plugin {
      * Unpacks a packed commit message into source data
      *
      * @param   string  the packed message
-     * @return  array   the source (string $message, array $logline, array $commands)
+     * @return  array   the source (string $message, array $logline, array $info, array $commands)
      */
     function unpack($packed) {
         $packed = str_replace( array("\r\n", "\r"), "\n", $packed );
@@ -75,6 +80,9 @@ class helper_plugin_gitbacked_histmeta extends DokuWiki_Plugin {
             "user    : ?(.*)\n".
             "summary : ?(.*)\n".
             "extra   : ?(.*)\n".
+            ")?(?:".
+            "info-id: ?(.*)\n".
+            "info-type: ?(.*)\n".
             ")?((?:cmd: ?.*\n)*))?$#u", $packed, $matches );
         // message
         $message = $matches[1];
@@ -82,11 +90,15 @@ class helper_plugin_gitbacked_histmeta extends DokuWiki_Plugin {
         if ($matches[2]) {
             $logline = array_slice($matches, 2, 7);
         }
-        // has command
+        // has info
         if ($matches[9]) {
-            preg_match_all( "#^cmd: ?(.*)$#um", $matches[9], $matches );
+            $info = array_slice($matches, 9, 2);
+        }
+        // has command
+        if ($matches[11]) {
+            preg_match_all( "#^cmd: ?(.*)$#um", $matches[11], $matches );
             $commands = $matches[1];
         }
-        return array($message, $logline, $commands);
+        return array($message, $logline, $info, $commands);
     }
 }

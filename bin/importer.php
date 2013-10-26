@@ -495,9 +495,11 @@ class git_importer {
             if (!$this->quiet) print "importing from `$data_type': `$data_id'"."\n";
 
             // add data to commit
+            $info = array($data_id);
             switch ($data_type) {
                 case "pages":
                 case "attic":
+                    $info[] = "page";
                     $item = wikiFN($data_id, '', false);
                     $file = $this->temp_dir.'/'.substr( $item, $base_cut );
                     io_mkdir_p(dirname($file));
@@ -530,6 +532,7 @@ class git_importer {
                     break;
                 case "media":
                 case "media_attic":
+                    $info[] = "media";
                     $item = mediaFN($data_id, '');
                     $file = $this->temp_dir.'/'.substr( $item, $base_cut );
                     io_mkdir_p(dirname($file));
@@ -564,7 +567,7 @@ class git_importer {
             if ($data_extra == 'hide') $commands[] = 'hide change';
 
             // now commit
-            $commit_message = $histmeta->pack($message, $logline, $commands);
+            $commit_message = $histmeta->pack($message, $logline, $info, $commands);
             $commit_date = $date;
             $repo->git('commit --allow-empty -m '.escapeshellarg($commit_message).' --date '.escapeshellarg($commit_date));
         }
