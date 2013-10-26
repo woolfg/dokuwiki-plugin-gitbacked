@@ -323,6 +323,7 @@ class git_importer {
                     // page is latest revision, replace attic, which might not exist
                     else if ($lastline && ($datadate == $lastdate)) {
                         fseek( $stream, -strlen($lastline), SEEK_CUR );  // back to previous line
+                        ftruncate($stream, ftell($stream));
                         $logline = $this->packHistoryLine($lastlogline, $id, "pages");
                         fwrite( $stream, $logline );
                     }
@@ -444,6 +445,7 @@ class git_importer {
                     // media is latest revision, replace attic, which might not exist
                     else if ($lastline && ($datadate == $lastdate)) {
                         fseek( $stream, -strlen($lastline), SEEK_CUR );  // back to previous line
+                        ftruncate($stream, ftell($stream));
                         $logline = $this->packHistoryLine($lastlogline, $id, "media");
                         fwrite( $stream, $logline );
                     }
