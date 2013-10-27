@@ -226,6 +226,7 @@ class git_exporter {
                     $file_path_sub = substr($file, $base_pages_cut+1);  // trim '/'
                     $data_id = substr($file_path_sub, 0, -4);  // trim '.txt'
                     if ($action == 'D') {
+                        $logline[2] = DOKU_CHANGE_TYPE_DELETE;
                         // page
                         $page_file = wikiFN($data_id, null, false);
                         unlink($page_file);
@@ -236,6 +237,7 @@ class git_exporter {
                         touch($attic_file, $date);
                     }
                     else {
+                        $logline[2] = DOKU_CHANGE_TYPE_EDIT;
                         // page
                         $page_file = wikiFN($data_id, null, false);
                         $content = $repo->git('show '.escapeshellarg($rev).':'.escapeshellarg($file));
@@ -264,12 +266,14 @@ class git_exporter {
                     $file_path_sub = substr($file, $base_pages_cut+1);  // trim '/'
                     $data_id = $file_path_sub;
                     if ($action == 'D') {
+                        $logline[2] = DOKU_CHANGE_TYPE_DELETE;
                         // media
                         $media_file = mediaFN($data_id);
                         unlink($media_file);
                         // attic -> none for deleted media
                     }
                     else {
+                        $logline[2] = DOKU_CHANGE_TYPE_EDIT;
                         // media
                         $media_file = mediaFN($data_id);
                         $content = $repo->git('show '.escapeshellarg($rev).':'.escapeshellarg($file));
