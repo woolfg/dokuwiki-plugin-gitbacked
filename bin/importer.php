@@ -497,21 +497,7 @@ class git_importer {
 
         // fetch the time of the last dokuwiki import entry
         if (!$this->full_history) {
-            $lastdate = 0;
-            $revisions = $this->temp_dir.'/revisions.txt';
-            $repo->git('log --format=%H > '.escapeshellarg($revisions).' 2>/dev/null || true');
-            if ($rh = @fopen($revisions, "rb")) {
-                while (!feof($rh)) {
-                    $rev = rtrim(fgets($rh), "\r\n");
-                    if (!$rev) continue;
-                    $log = $repo->git('log -n 1 --pretty=%s%n%n%b '.escapeshellarg($rev));
-                    list($message, $logline, $info, $commands) = $histmeta->unpack($log);
-                    if ($logline) {
-                        $lastdate = max($lastdate, intval($logline[0]));
-                    }
-                }
-                fclose($rh);
-            }
+            $lastdate = rtrim($repo->git('log --format=%at -n 1 2>/dev/null || true'), "\n");
             if ($lastdate > 0) {
                 print 'import changes after '.$lastdate."\n";
             }
@@ -677,9 +663,7 @@ class git_importer {
         }
 
         // commit
-        if ($lasttime == 0) {
-            $lasttime = rtrim($repo->git('log --pretty=%at -n 1'), "\n");
-        }
+        if ($lasttime == 0) $lasttime = time();
         $repo->git('commit --allow-empty -m '.escapeshellarg($this->getConf('importMetaMsg')).' --date '.escapeshellarg($lasttime));
     }
 
