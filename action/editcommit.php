@@ -14,7 +14,6 @@ if (!defined('DOKU_TAB')) define('DOKU_TAB', "\t");
 if (!defined('DOKU_PLUGIN')) define('DOKU_PLUGIN',DOKU_INC.'lib/plugins/');
 
 require_once DOKU_PLUGIN.'action.php';
-require_once dirname(__FILE__).'/../lib/Git.php';
 
 class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
 
@@ -25,7 +24,6 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
     }
 
     public function register(Doku_Event_Handler &$controller) {
-
         $controller->register_hook('IO_WIKIPAGE_WRITE', 'AFTER', $this, 'handle_io_wikipage_write');
         $controller->register_hook('MEDIA_UPLOAD_FINISH', 'AFTER', $this, 'handle_media_upload');
         $controller->register_hook('MEDIA_DELETE_FILE', 'AFTER', $this, 'handle_media_deletion');
@@ -47,10 +45,12 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
 
             //if it is time to run a pull request
             if ($lastPull+$timeToWait < $now) {
-                $repo = $this->initRepo();
+                //use an empty folder as working dir, aggressively remove everything
+                $repo = $this->initRepo($this->temp_dir.'/pull');
+                $repo->git('clean -fdx');
 
                 //execute the pull request
-                $repo->pull('origin',$repo->active_branch());
+                $repo->git('pull origin -f '.escapeshellarg($repo->active_branch()));
 
                 //save the current time to the file to track the last pull execution
                 file_put_contents($lastPullFile,serialize(time()));
@@ -58,36 +58,25 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
         }
     }
 
-    private function initRepo() {
-        //get path to the repo root (by default DokuWiki's savedir)
-        $repoPath = DOKU_INC.$this->getConf('repoPath');
-        //init the repo and create a new one if it is not present
-        io_mkdir_p($repoPath);
-        $repo = new GitRepo($repoPath, true, true);
-        //set git working directory (by default DokuWiki's savedir)
-        $repoWorkDir = DOKU_INC.$this->getConf('repoWorkDir');
-        $repo->git_path .= ' --work-tree '.escapeshellarg($repoWorkDir);
-
-        $params = $this->getConf('addParams');
-        if ($params) {
-            $repo->git_path .= ' '.$params;
+    private function initRepo($work_tree=null) {
+        $repo =& plugin_load('helper', 'gitbacked_git');
+        if (!$repo->getGitRepo) {
+            $repo->setGitRepo(null, $work_tree);
         }
         return $repo;
     }
 
     private function commitFile($filePath,$message) {
-
         $repo = $this->initRepo();
         
         //add the changed file and set the commit message
-        $repo->add($filePath);
-        $repo->commit($message);
+        $repo->git('add -- '.escapeshellarg($filePath));
+        $repo->git('commit --allow-empty -m '.escapeshellarg($message));
 
         //if the push after Commit option is set we push the active branch to origin
         if ($this->getConf('pushAfterCommit')) {
-            $repo->push('origin',$repo->active_branch());
+            $repo->git('push origin '.escapeshellarg($repo->active_branch()));
         }
-
     }
 
     private function getAuthor() {
@@ -105,11 +94,9 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
         );
 
         $this->commitFile($mediaPath,$message);
-
     }
 
     public function handle_media_upload(Doku_Event &$event, $param) {
-
         $mediaPath = $event->data[1];
         $mediaName = $event->data[2];
 
@@ -120,19 +107,15 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
         );
 
         $this->commitFile($mediaPath,$message);
-
     }
 
     public function handle_io_wikipage_write(Doku_Event &$event, $param) {
-
         $rev = $event->data[3];
-        
         /* On update to an existing page this event is called twice,
          * once for the transfer of the old version to the attic (rev will have a value)
          * and once to write the new version of the page into the wiki (rev is false) 
          */
         if (!$rev) {
-
             $pagePath = $event->data[0][0];
             $pageName = $event->data[2];
             $pageContent = $event->data[0][1];
@@ -150,7 +133,6 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
                 // thus, let's delete the file by ourselves, so git can recognize the deletion
                 // DokuWiki uses @unlink as well, so no error should be thrown if we delete it twice
                 @unlink($pagePath);
-
             } else {
                 //get the commit text for edits
                 $msgTemplate = $this->getConf('commitPageMsg');
@@ -162,12 +144,9 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
                 $msgTemplate
             );
 
-            $this->commitFile($pagePath,$message);        
-
+            $this->commitFile($pagePath,$message);
         }
-
     }
-
 }
 
 // vim:ts=4:sw=4:et:

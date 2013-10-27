@@ -127,4 +127,14 @@ class helper_plugin_gitbacked_git extends DokuWiki_Plugin {
         }
         return $branchArray;
     }
+
+    function active_branch($keep_asterisk = false) {
+        $branchArray = $this->list_branches(true);
+        $active_branch = preg_grep("/^\*/", $branchArray);
+        reset($active_branch);
+        if ($keep_asterisk)
+            return current($active_branch);
+        else
+            return str_replace("* ", "", current($active_branch));
+    }
 }
