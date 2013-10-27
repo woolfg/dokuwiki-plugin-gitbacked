@@ -28,6 +28,9 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
         $controller->register_hook('MEDIA_UPLOAD_FINISH', 'AFTER', $this, 'handle_media_upload');
         $controller->register_hook('MEDIA_DELETE_FILE', 'AFTER', $this, 'handle_media_deletion');
         $controller->register_hook('DOKUWIKI_DONE', 'AFTER', $this, 'handle_periodic_pull');
+        // add this setting so that escapeshellarg() doesn't strip non-ASCII characters
+        // when executing php on the web
+        setlocale(LC_CTYPE, "en_US.UTF-8");
     }
 
     public function handle_periodic_pull(Doku_Event &$event, $param) {
