@@ -9,7 +9,7 @@ require_once DOKU_INC.'inc/cliopts.php';
 
 // handle options
 $short_opts = 'hr';
-$long_opts  = array('help', 'run', 'git-dir=', 'branch=', 'no-meta', 'quiet');
+$long_opts  = array('help', 'run', 'git-dir=', 'branch=', 'full-history', 'no-meta', 'quiet');
 
 $OPTS = Doku_Cli_Opts::getOptions(__FILE__, $short_opts, $long_opts);
 
@@ -34,6 +34,11 @@ if ( $OPTS->has('git-dir') ) {
 // handle '--branch' option
 if ( $OPTS->has('branch') ) {
     $importer->git_branch = getSuppliedArgument($OPTS, null, 'branch');
+}
+
+// handle '--full' option
+if ( $OPTS->has('full-history') ) {
+    $importer->full_history = true;
 }
 
 // handle '--no-meta' option
@@ -62,6 +67,7 @@ function usage() {
         -r, --run      run importer
         --git-dir      defines the git repo path (overwrites $conf['repoPath'])
         --branch       defines the git branch to import (overwrites $conf['gitBranch'])
+        --full-history imports all changes (default only those after the last dokuwiki import)
         --no-meta      do not import extra meta files to git (other than .changes, .meta, .indexed)
         --quiet        do not output message during processing
 
@@ -489,6 +495,31 @@ class git_importer {
         $base_cut = strlen($base);
         $histmeta =& plugin_load('helper', 'gitbacked_histmeta');
 
+        // fetch the time of the last dokuwiki import entry
+        if (!$this->full_history) {
+            $lastdate = 0;
+            $revisions = $this->temp_dir.'/revisions.txt';
+            $repo->git('log --format=%H > '.escapeshellarg($revisions).' 2>/dev/null || true');
+            if ($rh = @fopen($revisions, "rb")) {
+                while (!feof($rh)) {
+                    $rev = rtrim(fgets($rh), "\r\n");
+                    if (!$rev) continue;
+                    $log = $repo->git('log -n 1 --pretty=%s%n%n%b '.escapeshellarg($rev));
+                    list($message, $logline, $info, $commands) = $histmeta->unpack($log);
+                    if ($logline) {
+                        $lastdate = max($lastdate, intval($logline[0]));
+                    }
+                }
+                fclose($rh);
+            }
+            if ($lastdate > 0) {
+                print 'import changes after '.$lastdate."\n";
+            }
+            else {
+                print 'import all changes'."\n";
+            }
+        }
+
         // read history entries line by line and process them
         $hh = fopen($historyfile, "rb");
         while (!feof($hh)) {
@@ -501,6 +532,11 @@ class git_importer {
             // read info from a line
             list( $logline, $data_id, $data_type, $data_extra) = $this->unpackHistoryLine($line);
             list( $date, $ip, $type, $id, $user, $summary, $extra ) = $logline;
+
+            // only import those that are newer
+            if (!$this->full_history) {
+                if (intval($date) <= $lastdate) continue;
+            }
 
             if (!$this->quiet) print "importing from `$data_type': `$data_id'"."\n";
 
