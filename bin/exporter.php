@@ -178,7 +178,7 @@ class git_exporter {
                     'type'  => DOKU_CHANGE_TYPE_EDIT,
                     'id'    => $data_id,
                     'user'  => '',
-                    'sum'   => str_replace("\n", " ", rtrim($message, "\n")),
+                    'sum'   => str_replace("\n", "\v ", rtrim($message, "\n")),  // replaces LF to a vertical tab
                     'extra' => 'gitbacked_export'
                 );
                 $logline = array_values($logline);

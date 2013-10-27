@@ -538,6 +538,12 @@ class git_importer {
                 if (intval($date) <= $lastdate) continue;
             }
 
+            // if there's a pending external commit, commit it
+            if (@$last_external_commit && ($date > $last_external_commit['date'])) {
+                $repo->git('commit --allow-empty -m '.escapeshellarg($last_external_commit['message']).' --date '.escapeshellarg($last_external_commit['date']));
+                $last_external_commit = null;
+            }
+
             if (!$this->quiet) print "importing from `$data_type': `$data_id'"."\n";
 
             // add data to commit
@@ -613,11 +619,27 @@ class git_importer {
             if ($data_extra == 'hide') $commands[] = 'hide change';
 
             // now commit
-            $commit_message = $histmeta->pack($message, $logline, $info, $commands);
-            $commit_date = $date;
-            $repo->git('commit --allow-empty -m '.escapeshellarg($commit_message).' --date '.escapeshellarg($commit_date));
+            // merge external commits with exactly same timestamp into one
+            if ($extra == 'gitbacked_export') {
+                $last_external_commit = array(
+                    'date' => $date,
+                    'message' => str_replace("\v ", "\n", $summary)
+                );
+            }
+            // commit a dokuwiki commit
+            else {
+                $commit_message = $histmeta->pack($message, $logline, $info, $commands);
+                $commit_date = $date;
+                $repo->git('commit --allow-empty -m '.escapeshellarg($commit_message).' --date '.escapeshellarg($commit_date));
+            }
         }
         fclose($hh);
+
+        // if there's a pending external commit, commit it
+        if (@$last_external_commit) {
+            $repo->git('commit --allow-empty -m '.escapeshellarg($last_external_commit['message']).' --date '.escapeshellarg($last_external_commit['date']));
+            $last_external_commit = null;
+        }
     }
 
     private function importMeta($repo) {
