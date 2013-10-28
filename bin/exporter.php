@@ -62,11 +62,13 @@ function usage() {
 
     Exports data from git repo to DokuWiki.
 
+    NOTE: this will overwrite the original DokuWiki data.
+          Make a backup in case something go wrong.
+
     OPTIONS
         -h, --help     show this help and exit
         -r, --run      run exporter
         --git-dir      defines the git repo path (overwrites $conf['repoPath'])
-        --work-dir     defines the base path git ought to export (overwrites $conf['repoWorkDir'])
         --branch       defines the git branch to import (overwrites $conf['gitBranch'])
         --no-meta      do not clear and re-export extra meta files to wiki (other than .changes, .meta, .indexed)
         --quiet        do not output message during processing
@@ -141,21 +143,6 @@ class git_exporter {
 
         // read each entry and export
         print 'exporting data...'."\n";
-        $base_workdir = realpath($repo->work_tree);
-        $base_workdir_cut = strlen($base_workdir);
-        $base_pages = realpath($conf['datadir']);
-        $base_pages = substr($base_pages, $base_workdir_cut+1);  // trim '/'
-        $base_pages_cut = strlen($base_pages);
-        $base_media = realpath($conf['mediadir']);
-        $base_media = substr($base_media, $base_workdir_cut+1);  // trim '/'
-        $base_media_cut = strlen($base_media);
-        $base_meta = realpath($conf['metadir']);
-        $base_meta = substr($base_meta, $base_workdir_cut+1);  // trim '/'
-        $base_meta_cut = strlen($base_meta);
-        $base_mediameta = realpath($conf['mediametadir']);
-        $base_mediameta = substr($base_mediameta, $base_workdir_cut+1);  // trim '/'
-        $base_mediameta_cut = strlen($base_mediameta);
-
         $hh = fopen($historyfile, 'rb');
         while (!feof($hh)) {
             $rev = rtrim(fgets($hh), "\r\n");
@@ -165,11 +152,13 @@ class git_exporter {
             $external_commit = false;
             $log = $repo->git('log -n 1 --pretty=%s%n%n%b '.escapeshellarg($rev));
             list($message, $logline, $info, $commands) = $this->histmeta->unpack($log);
+            // -- info
             if (empty($info)) {
                 $external_commit = true;
                 $info = array("", "");
             }
             list($data_id, $data_type) = $info;
+            // -- logline
             if (empty($logline)) {
                 $external_commit = true;
                 $logline = array(
@@ -184,6 +173,7 @@ class git_exporter {
                 $logline = array_values($logline);
             }
             list($date, $ip, $type, $id, $user, $summary, $extra) = $logline;
+            // -- commands
             if (empty($commands)) {
                 $commands = array();
             }
@@ -192,6 +182,7 @@ class git_exporter {
             if (!$external_commit) {
                 switch ($data_type) {
                     case "page":
+                        if (!$this->quiet) print "[$date] add meta entry: `$data_id'"."\n";
                         $content = implode("\t", $logline)."\n";
                         $meta_file = (array_search("hide change", $commands) === false) ? metaFN($data_id, '.changes') : $this->backup->metaFN($data_id, '.changes') ;
                         io_mkdir_p(dirname($meta_file));
@@ -202,6 +193,7 @@ class git_exporter {
                         touch($global_meta_file, $date);
                         break;
                     case "media":
+                        if (!$this->quiet) print "[$date] add media_meta entry: `$data_id'"."\n";
                         $content = implode("\t", $logline)."\n";
                         $meta_file = (array_search("hide change", $commands) === false) ? mediaMetaFN($data_id, '.changes') : $this->backup->mediaMetaFN($data_id, '.changes') ;
                         io_mkdir_p(dirname($meta_file));
@@ -220,11 +212,11 @@ class git_exporter {
             $files = $repo->git('log -n 1 --name-status --pretty=format: '.escapeshellarg($rev));
             $files = explode("\n", $files);
             foreach ($files as $file) {
+                if (!$file) continue;
                 list($action, $file) = explode("\t", $file);
                 // pages
-                if (substr($file, 0, $base_pages_cut+1) == $base_pages.'/') {
-                    $file_path_sub = substr($file, $base_pages_cut+1);  // trim '/'
-                    $data_id = substr($file_path_sub, 0, -4);  // trim '.txt'
+                if ($data_id = $repo->getRealId($file, $conf['datadir'], '.txt')) {
+                    if (!$this->quiet) print "[$date] add page: `$data_id'"."\n";
                     if ($action == 'D') {
                         $logline[2] = DOKU_CHANGE_TYPE_DELETE;
                         // page
@@ -250,6 +242,7 @@ class git_exporter {
                     }
                     // if external commit, add meta entry for all edited pages
                     if ($external_commit) {
+                        if (!$this->quiet) print "[$date] add meta entry (external commit): `$data_id'"."\n";
                         $logline[3] = $data_id;  // replace $data_id
                         $content = implode("\t", $logline)."\n";
                         $meta_file = (array_search("hide change", $commands) === false) ? metaFN($data_id, '.changes') : $this->backup->metaFN($data_id, '.changes') ;
@@ -262,9 +255,8 @@ class git_exporter {
                     }
                 }
                 // media
-                elseif (substr($file, 0, $base_media_cut+1) == $base_media.'/') {
-                    $file_path_sub = substr($file, $base_pages_cut+1);  // trim '/'
-                    $data_id = $file_path_sub;
+                elseif ($data_id = $repo->getRealId($file, $conf['mediadir'])) {
+                    if (!$this->quiet) print "[$date] add media: `$data_id'"."\n";
                     if ($action == 'D') {
                         $logline[2] = DOKU_CHANGE_TYPE_DELETE;
                         // media
@@ -288,6 +280,7 @@ class git_exporter {
                     }
                     // if external commit, add meta entry for all edited media
                     if ($external_commit) {
+                        if (!$this->quiet) print "[$date] add media_meta entry (external commit): `$data_id'"."\n";
                         $logline[3] = $data_id;  // replace $data_id
                         $content = implode("\t", $logline)."\n";
                         $meta_file = (array_search("hide change", $commands) === false) ? mediaMetaFN($data_id, '.changes') : $this->backup->mediaMetaFN($data_id, '.changes');
@@ -300,10 +293,9 @@ class git_exporter {
                     }
                 }
                 // meta
-                elseif (substr($file, 0, $base_meta_cut+1) == $base_meta.'/') {
+                elseif ($data_id = $repo->getRealId($file, $conf['metadir'])) {
                     if (!$this->no_meta) {
-                        $file_path_sub = substr($file, $base_meta_cut+1);  // trim '/'
-                        $data_id = $file_path_sub;
+                        if (!$this->quiet) print "[$date] add meta file (external commit): `$data_id'"."\n";
                         $meta_file = metaFN($data_id, '');
                         io_mkdir_p(dirname($meta_file));
                         $content = $repo->git('show '.escapeshellarg($rev).':'.escapeshellarg($file));
@@ -312,10 +304,9 @@ class git_exporter {
                     }
                 }
                 // media meta
-                elseif (substr($file, 0, $base_mediameta_cut+1) == $base_mediameta.'/') {
+                elseif ($data_id = $repo->getRealId($file, $conf['mediametadir'])) {
                     if (!$this->no_meta) {
-                        $file_path_sub = substr($file, $base_mediameta_cut+1);  // trim '/'
-                        $data_id = $file_path_sub;
+                        if (!$this->quiet) print "[$date] add media_meta file (external commit): `$data_id'"."\n";
                         $mediameta_file = mediaMetaFN($data_id, '');
                         io_mkdir_p(dirname($mediameta_file));
                         $content = $repo->git('show '.escapeshellarg($rev).':'.escapeshellarg($file));
@@ -352,7 +343,7 @@ class git_exporter {
                 $subfile = $dir.'/'.$file;
                 if (is_file($subfile)) {
                     if (preg_match("/$regex/", $file)) {
-                        print "remove `$subfile'"."\n";
+                        if (!$this->quiet) print "remove `$subfile'"."\n";
                         unlink($subfile);
                     }
                 }

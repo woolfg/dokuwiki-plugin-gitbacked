@@ -86,7 +86,6 @@ class git_importer {
 
     function __construct() {
         global $conf;
-        $this->work_dir = realpath(DOKU_INC.$this->getConf('repoWorkDir'));
         $this->temp_dir = $conf['tmpdir'].'/gitbacked/importer';
         io_mkdir_p($this->temp_dir);
         $this->backup =& plugin_load('helper', 'gitbacked_backup');
@@ -106,7 +105,7 @@ class git_importer {
 
         // init git repo
         $repo =& plugin_load('helper', 'gitbacked_git');
-        $repo->setGitRepo($this->git_dir, $this->temp_dir, $this->git_branch);
+        $repo->setGitRepo($this->git_dir, $this->temp_dir.'/import', $this->git_branch);
 
         // collect history
         print 'collecting history...'."\n";
@@ -136,6 +135,7 @@ class git_importer {
 
         // import from history list
         print 'start import...'."\n";
+        $repo->lock();
         $this->importHistory($repo, $historylist);
 
         // import other meta files
@@ -143,10 +143,11 @@ class git_importer {
             print 'import extra meta files...'."\n";
             $this->importMeta($repo);
         }
+        $repo->unlock();
 
         // unlock, clean, and done
         print 'clean up...'."\n";
-        $this->clearDir($this->temp_dir);
+        $repo->clearDir($this->temp_dir);
         print 'done.'."\n";
         flock($lock, LOCK_UN);
         @unlink($lockfile);
@@ -538,11 +539,9 @@ class git_importer {
                 case "pages":
                 case "attic":
                     $info[] = "page";
-                    $item = wikiFN($data_id, '', false);
-                    $file = $this->temp_dir.substr($item, $base_cut);
-                    io_mkdir_p(dirname($file));
+                    $file = wikiFN($data_id, '', false);
                     if ($type == 'D') {
-                        $repo->git('rm --cached --ignore-unmatch -- '.escapeshellarg($file));
+                        $repo->removeFile($file);
                         $message = str_replace(
                             array('%page%', '%summary%', '%user%'),
                             array($data_id, $summary, $user),
@@ -550,7 +549,7 @@ class git_importer {
                         );
                     }
                     else {
-                        $datafile = ($data_type=='pages') ? $item : wikiFN($data_id, $date, false);
+                        $datafile = ($data_type=='pages') ? $file : wikiFN($data_id, $date, false);
                         // history entry exist, data missing?
                         // or hidden if found in the backup directory
                         if (!is_file($datafile)) {
@@ -558,8 +557,7 @@ class git_importer {
                             if (is_file($datafile)) $commands[] = "hide data";
                         }
                         if (is_file($datafile)) {
-                            file_put_contents($file, io_readFile($datafile, false));
-                            $repo->git('add -- '.escapeshellarg($file));
+                            $repo->addFileInput($file, null, io_readFile($datafile, false));
                         }
                         $message = str_replace(
                             array('%page%', '%summary%', '%user%'),
@@ -571,11 +569,9 @@ class git_importer {
                 case "media":
                 case "media_attic":
                     $info[] = "media";
-                    $item = mediaFN($data_id, '');
-                    $file = $this->temp_dir.substr($item, $base_cut);
-                    io_mkdir_p(dirname($file));
+                    $file = mediaFN($data_id, '');
                     if ($type == 'D') {
-                        $repo->git('rm --cached --ignore-unmatch -- '.escapeshellarg($file));
+                        $repo->removeFile($file);
                         $message = str_replace(
                             array('%media%', '%user%'),
                             array($data_id, $user),
@@ -583,7 +579,7 @@ class git_importer {
                         );
                     }
                     else {
-                        $datafile = ($data_type=='media') ? $item : mediaFN($data_id, $date);
+                        $datafile = ($data_type=='media') ? $file : mediaFN($data_id, $date);
                         // history entry exist, data missing?
                         // or hidden if found in the backup directory
                         if (!is_file($datafile)) {
@@ -591,8 +587,7 @@ class git_importer {
                             if (is_file($datafile)) $commands[] = "hide data";
                         }
                         if (is_file($datafile)) {
-                            copy($datafile, $file);
-                            $repo->git('add -- '.escapeshellarg($file));
+                            $repo->addFile($datafile, $repo->getInnerPath($file));
                         }
                         $message = str_replace(
                             array('%media%', '%user%'),
@@ -630,63 +625,32 @@ class git_importer {
 
     private function importMeta($repo) {
         global $conf;
-        $base = realpath($this->work_dir);
-        $base_cut = strlen($base);
-        $meta_short = substr($conf['metadir'], $base_cut+1);  // trim '/'
-        $mediameta_short = substr($conf['mediametadir'], $base_cut+1);  // trim '/'
-        $lasttime = 0;
-
         // remove old meta
-        $repo->git('rm -rf --cached --ignore-unmatch -- '.escapeshellarg($meta_short.'/'));
-        $repo->git('rm -rf --cached --ignore-unmatch -- '.escapeshellarg($mediameta_short.'/'));
+        $repo->removeFile($conf['metadir']);
+        $repo->removeFile($conf['mediametadir']);
 
         // add meta
         $data = array();
         $this->getChildFiles($data, $conf['metadir'], '^(?!_).*(?<!\.changes|\.indexed|\.meta)$');
         foreach($data as $datafile) {
             if (!$this->quiet) print "add `$datafile'"."\n";
-            $file = $this->temp_dir.substr($datafile, $base_cut);
-            io_mkdir_p(dirname($file));
-            copy($datafile, $file);
-            $repo->git('add -- '.escapeshellarg($file));
-            $lasttime = max($lasttime, intval(filemtime($datafile)));
+            $repo->addFile($datafile);
         }
         $data = array();
         $this->getChildFiles($data, $conf['mediametadir'], '^(?!_).*(?<!\.changes|\.indexed|\.meta)$');
         foreach($data as $datafile) {
             if (!$this->quiet) print "add `$datafile'"."\n";
-            $file = $this->temp_dir.substr($datafile, $base_cut);
-            io_mkdir_p(dirname($file));
-            copy($datafile, $file);
-            $repo->git('add -- '.escapeshellarg($file));
-            $lasttime = max($lasttime, intval(filemtime($datafile)));
+            $repo->addFile($datafile);
         }
 
         // commit
-        if ($lasttime == 0) $lasttime = time();
-        $repo->git('commit --allow-empty -m '.escapeshellarg($this->getConf('importMetaMsg')).' --date '.escapeshellarg($lasttime));
+        $repo->git('commit --allow-empty -m '.escapeshellarg($this->getConf('importMetaMsg')));
     }
 
     // this script is not a true plugin, fake this method for convenience
     private function getConf($setting, $notset=false) {
         $my =& plugin_load('helper', 'gitbacked_git');
         return $my->getConf($setting, $notset);
-    }
-
-    private function clearDir($dir) {
-        $dh = @opendir($dir);
-        if($dh) {
-            while(($file = readdir($dh)) !== false){
-                if ($file=='.'||$file=='..') continue;
-                $subfile = $dir.'/'.$file;
-                if (is_file($subfile)) unlink($subfile);
-                else $this->clearDir($subfile);
-            }
-            closedir($dh);
-            rmdir($dir);
-            return true;
-        }
-        return false;
     }
 
     private function getChildFiles(&$data=array(), $dir, $regex="") {

@@ -4,7 +4,7 @@
  *
  * @author Wolfgang Gassler <wolfgang@gassler.org>
  */
-
+$conf['autoCommit'] = 0;
 $conf['pushAfterCommit'] = 0;
 $conf['periodicPull'] = 0;
 $conf['periodicMinutes'] = 60;
@@ -15,7 +15,8 @@ $conf['commitMediaMsgDel'] = 'Wiki media %media% deleted by %user%';
 $conf['importMetaMsg'] = 'git importer: updated meta and image_meta from wiki';
 $conf['backupSuffix'] = '.bak';
 $conf['gitPath'] = '/usr/bin/git';
-$conf['repoPath'] = $GLOBALS['conf']['savedir'];
-$conf['repoWorkDir'] = $GLOBALS['conf']['savedir'];
+$conf['repoPath'] = 'data.git';
+$conf['repoBase'] = 'dokuwiki';
+$conf['dataBase'] = '';
 $conf['gitBranch'] = '';
 $conf['addParams'] = '';

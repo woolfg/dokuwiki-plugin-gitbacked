@@ -5,7 +5,11 @@ if (!defined('DOKU_INC')) die();
 class helper_plugin_gitbacked_git extends DokuWiki_Plugin {
 
     function __construct() {
-        $this->setGitPath($this->getConf('gitPath'));
+        global $conf;
+        $this->setGitPath($this->getConf('gitPath'));   
+        $this->repo_base = $this->getConf('repoBase');
+        $this->data_base = realpath(DOKU_INC.$this->getConf('dataBase'));
+        $this->temp_dir = $conf['tmpdir'].'/gitbacked';
     }
 
     /**
@@ -21,6 +25,59 @@ class helper_plugin_gitbacked_git extends DokuWiki_Plugin {
      */
     function setGitPath($git_path) {
         $this->git_path = $git_path;
+    }
+
+    /**
+     * Gets the corresponding inner path of a given file or directory
+     */
+    function getInnerPath($path) {
+        $cut = strlen($this->data_base)+1;  // plus trailing '/'
+        if (substr($path, 0, $cut) == $this->data_base.'/') {
+            $pathShort = substr($path, $cut);
+        }
+        else {  // if failed to strip data_base, use base name (since last '/') instead
+            $pathinfo = pathinfo($path);
+            $pathShort = $pathinfo['basename'];
+        }
+        $innerPath = $this->work_tree.'/'.$this->repo_base.'/'.$pathShort;
+        return $innerPath;
+    }
+
+    /**
+     * Gets the corresponding file id of a given inner path of a file
+     *
+     * returns false if:
+     *  1. innerPath is not under the specified dokuPath
+     *  2. innerPath doesn't have the extension $ext
+     *  3. repo_base or data_base is mis-configured
+     */
+    function getRealId($innerPath, $dokuPath, $ext=null) {
+        // check whether ext matches
+        if (!empty($ext)) {
+            $ext_exist = true;
+            $ext_cut = strlen($ext);
+        }
+        if ($ext_exist && !(substr($innerPath, -$ext_cut) == $ext)) return false;
+        // get short inner path
+        $cut = strlen($this->repo_base)+1;  // plus trailing '/'
+        if (substr($innerPath, 0, $cut) == $this->repo_base.'/') {
+            $innerPathShort = substr($innerPath, $cut);
+        }
+        else return false;
+        // get short doku path
+        $cut = strlen($this->data_base)+1;  // plus trailing '/'
+        if (substr($dokuPath, 0, $cut) == $this->data_base.'/') {
+            $dokuPathShort = substr($dokuPath, $cut);
+        }
+        else return false;
+        // check whether short inner path has short doku path in leading
+        $cut = strlen($dokuPathShort)+1;  // plus trailing '/'
+        if (substr($innerPathShort, 0, $cut) == $dokuPathShort.'/') {
+            $id = substr($innerPathShort, $cut);
+            if ($ext_exist) $id = substr($id, 0, -$ext_cut);
+            return $id;
+        }
+        return false;
     }
 
     /**
@@ -56,7 +113,7 @@ class helper_plugin_gitbacked_git extends DokuWiki_Plugin {
         }
 
         // set work tree
-        $this->work_tree = !empty($work_tree) ? $work_tree : DOKU_INC.$this->getConf('repoWorkDir');
+        $this->work_tree = !empty($work_tree) ? $work_tree : $this->repo_path;
         io_mkdir_p($this->work_tree);
         $this->work_tree = realpath($this->work_tree);
 
@@ -136,5 +193,71 @@ class helper_plugin_gitbacked_git extends DokuWiki_Plugin {
             return current($active_branch);
         else
             return str_replace("* ", "", current($active_branch));
+    }
+
+    function addFile($file=null, $innerPath=null, $removeIfEmpty=true) {
+        if (empty($innerPath)) $innerPath = $this->getInnerPath($file);
+        if (is_file($file)) {
+            if ($file != $innerPath) {
+                io_mkdir_p(dirname($innerPath));
+                // try acquiring a hard link if available to save the cost
+                if (!@link($file, $innerPath)) copy($file, $innerPath);
+            }
+            $this->git('add -- '.escapeshellarg($innerPath));
+        }
+        else if ($removeIfEmpty) {
+            io_mkdir_p(dirname($innerPath));
+            $this->git('rm --ignore-unmatch -- '.escapeshellarg($innerPath));
+        }
+    }
+
+    function addFileInput($file=null, $innerPath=null, $content) {
+        if (empty($innerPath)) $innerPath = $this->getInnerPath($file);
+        io_mkdir_p(dirname($innerPath));
+        file_put_contents($innerPath, $content);
+        $this->git('add -- '.escapeshellarg($innerPath));
+    }
+
+    // can also pass a directory
+    function removeFile($path=null, $innerPath=null) {
+        if (empty($innerPath)) $innerPath = $this->getInnerPath($path);
+        io_mkdir_p(dirname($innerPath));
+        $this->git('rm -rf --cached --ignore-unmatch -- '.escapeshellarg($innerPath));
+    }
+
+    function lock() {
+        $this->lockfile = $this->temp_dir.'/commit.lock';
+        io_mkdir_p(dirname($this->lockfile));
+        $this->lock = fopen($this->lockfile, 'wb');
+        if (flock($this->lock, LOCK_EX)) {
+            return true;
+        }
+        throw new Exception();
+        return false;
+    }
+
+    function unlock() {
+        if ($this->lock) {
+            if (flock($this->lock, LOCK_UN)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function clearDir($dir) {
+        $dh = @opendir($dir);
+        if($dh) {
+            while(($file = readdir($dh)) !== false){
+                if ($file=='.'||$file=='..') continue;
+                $subfile = $dir.'/'.$file;
+                if (is_file($subfile)) unlink($subfile);
+                else $this->clearDir($subfile);
+            }
+            closedir($dh);
+            rmdir($dir);
+            return true;
+        }
+        return false;
     }
 }
