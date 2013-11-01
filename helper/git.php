@@ -142,8 +142,13 @@ class helper_plugin_gitbacked_git extends DokuWiki_Plugin {
                 // exist, not active --> checkout
                 else {
                     $this->git('checkout --force '.escapeshellarg($branch));
+                    $this->git('reset');
                 }
             }
+        }
+        else {
+            // reset the staging area
+            $this->git('reset');
         }
     }
 
