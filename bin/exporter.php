@@ -68,9 +68,12 @@ function usage() {
     OPTIONS
         -h, --help     show this help and exit
         -r, --run      run exporter
-        --git-dir      defines the git repo path (overwrites $conf['repoPath'])
-        --branch       defines the git branch to import (overwrites $conf['gitBranch'])
-        --no-meta      do not clear and re-export extra meta files to wiki (other than .changes, .meta, .indexed)
+        --git-dir      defines the git repo path
+                       (overwrites $conf['repoPath'])
+        --branch       defines the git branch to import
+                       (overwrites $conf['gitBranch'])
+        --no-meta      do not clear and re-export extra meta files to wiki
+                       (other than .changes, .meta, .indexed)
         --quiet        do not output message during processing
 
 EOF;

@@ -65,10 +65,14 @@ function usage() {
     OPTIONS
         -h, --help     show this help and exit
         -r, --run      run importer
-        --git-dir      defines the git repo path (overwrites $conf['repoPath'])
-        --branch       defines the git branch to import (overwrites $conf['gitBranch'])
-        --full-history imports all changes (default only those after the last dokuwiki import)
-        --no-meta      do not import extra meta files to git (other than .changes, .meta, .indexed)
+        --git-dir      defines the git repo path
+                       (overwrites $conf['repoPath'])
+        --branch       defines the git branch to import
+                       (overwrites $conf['gitBranch'])
+        --full-history imports all changes
+                       (default only those after the last dokuwiki import)
+        --no-meta      do not import extra meta files to git
+                       (other than .changes, .meta, .indexed)
         --quiet        do not output message during processing
 
 EOF;
