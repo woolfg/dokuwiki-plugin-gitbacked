@@ -9,7 +9,7 @@ require_once DOKU_INC.'inc/cliopts.php';
 
 // handle options
 $short_opts = 'hr';
-$long_opts  = array('help', 'run', 'git-dir=', 'work-dir=', 'branch=', 'no-meta', 'quiet');
+$long_opts  = array('help', 'run', 'git-dir=', 'work-dir=', 'branch=', 'no-meta', 'keep-meta', 'quiet');
 
 $OPTS = Doku_Cli_Opts::getOptions(__FILE__, $short_opts, $long_opts);
 
@@ -46,6 +46,11 @@ if ( $OPTS->has('no-meta') ) {
     $exporter->no_meta = true;
 }
 
+// handle '--keep-meta' option
+if ( $OPTS->has('keep-meta') ) {
+    $exporter->keep_meta = true;
+}
+
 // handle '--quiet' option
 if ( $OPTS->has('quiet') ) {
     $exporter->quiet = true;
@@ -74,6 +79,8 @@ function usage() {
                        (overwrites $conf['gitBranch'])
         --no-meta      do not clear and re-export extra meta files to wiki
                        (other than .changes, .meta, .indexed)
+        --keep-meta    do not clear .indexed and .meta before export
+                       (NOTE: may cause data inconsistent, use carefully)
         --quiet        do not output message during processing
 
 EOF;
@@ -123,16 +130,32 @@ class git_exporter {
         $this->clearDir($this->backup->conf('mediaolddir'), '');
         // clear original meta
         if ($this->no_meta) {
-            $this->clearDir($conf['metadir'], '^(?!_).*\.(?:changes|indexed|meta)$');
-            $this->clearDir($this->backup->conf('metadir'), '^(?!_).*\.(?:changes|indexed|meta)$');
-            $this->clearDir($conf['mediametadir'], '^(?!_).*\.(?:changes|indexed|meta)$');
-            $this->clearDir($this->backup->conf('mediametadir'), '^(?!_).*\.(?:changes|indexed|meta)$');
+            if ($this->keep_meta) {
+                $this->clearDir($conf['metadir'], '^(?!_).*\.changes$');
+                $this->clearDir($this->backup->conf('metadir'), '^(?!_).*\.changes$');
+                $this->clearDir($conf['mediametadir'], '^(?!_).*\.changes$');
+                $this->clearDir($this->backup->conf('mediametadir'), '^(?!_).*\.changes$');
+            }
+            else {
+                $this->clearDir($conf['metadir'], '^(?!_).*\.(?:changes|indexed|meta)$');
+                $this->clearDir($this->backup->conf('metadir'), '^(?!_).*\.(?:changes|indexed|meta)$');
+                $this->clearDir($conf['mediametadir'], '^(?!_).*\.(?:changes|indexed|meta)$');
+                $this->clearDir($this->backup->conf('mediametadir'), '^(?!_).*\.(?:changes|indexed|meta)$');
+            }
         }
         else {
-            $this->clearDir($conf['metadir'], '^(?!_).*$');
-            $this->clearDir($this->backup->conf('metadir'), '^(?!_).*$');
-            $this->clearDir($conf['mediametadir'], '^(?!_).*$');
-            $this->clearDir($this->backup->conf('mediametadir'), '^(?!_).*$');
+            if ($this->keep_meta) {
+                $this->clearDir($conf['metadir'], '^(?!_).*(?<!\.indexed)(?<!\.meta)$');
+                $this->clearDir($this->backup->conf('metadir'), '^(?!_).*(?<!\.indexed)(?<!\.meta)$');
+                $this->clearDir($conf['mediametadir'], '^(?!_).*(?<!\.indexed)(?<!\.meta)$');
+                $this->clearDir($this->backup->conf('mediametadir'), '^(?!_).*(?<!\.indexed)(?<!\.meta)$');
+            }
+            else {
+                $this->clearDir($conf['metadir'], '^(?!_).*$');
+                $this->clearDir($this->backup->conf('metadir'), '^(?!_).*$');
+                $this->clearDir($conf['mediametadir'], '^(?!_).*$');
+                $this->clearDir($this->backup->conf('mediametadir'), '^(?!_).*$');
+            }
         }
         @unlink($conf['metadir'].'/_dokuwiki.changes');
         @unlink($conf['metadir'].'/_dokuwiki.changes.trimmed');
