@@ -93,9 +93,12 @@ class helper_plugin_gitbacked_git extends DokuWiki_Plugin {
     function setGitRepo($repo_path=null, $work_tree=null, $branch=null, $extra_params=null, $create_new=true, $protect=true) {
         // set repo path
         $this->repo_path = !empty($repo_path) ? $repo_path : DOKU_INC.$this->getConf('repoPath');
-        if (!is_dir($this->repo_path.'/.git')) {
+        if (is_dir($this->repo_path.'/.git')) {  // if a non-bare repo existed, use it
+            $this->repo_path = $this->repo_path.'/.git'; 
+        }
+        if (!is_dir($this->repo_path)) {
             if ($create_new) {
-                $this->cmd(escapeshellarg($this->git_path).' init '.escapeshellarg($this->repo_path));
+                $this->cmd(escapeshellarg($this->git_path).' init --bare '.escapeshellarg($this->repo_path));
             }
             else {
                 throw new Exception('"'.$this->repo_path.'" is not a git repository');
@@ -122,7 +125,7 @@ class helper_plugin_gitbacked_git extends DokuWiki_Plugin {
 
         // set git_bin
         $this->git_bin = escapeshellarg($this->git_path).
-            ' --git-dir '.escapeshellarg($this->repo_path.'/.git').
+            ' --git-dir '.escapeshellarg($this->repo_path).
             ' --work-tree '.escapeshellarg($this->work_tree);
         if (!empty($this->extra_params)) $this->git_bin .= ' '.$this->extra_params;
 
