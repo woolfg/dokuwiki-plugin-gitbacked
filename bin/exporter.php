@@ -43,7 +43,7 @@ if ( $OPTS->has('branch') ) {
 
 // handle '--no-meta' option
 if ( $OPTS->has('no-meta') ) {
-    $importer->no_meta = true;
+    $exporter->no_meta = true;
 }
 
 // handle '--quiet' option
