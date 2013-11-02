@@ -68,7 +68,10 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
         $repoWorkDir = DOKU_INC.$this->getConf('repoWorkDir');
         $repo->git_path .= ' --work-tree '.escapeshellarg($repoWorkDir);
 
-        $params = $this->getConf('addParams');
+        $params = str_replace(
+            array('%mail%','%user%'),
+            array($this->getAuthorMail(),$this->getAuthor()),
+            $this->getConf('addParams'));
         if ($params) {
             $repo->git_path .= ' '.$params;
         }
@@ -78,7 +81,7 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
     private function commitFile($filePath,$message) {
 
         $repo = $this->initRepo();
-        
+
         //add the changed file and set the commit message
         $repo->add($filePath);
         $repo->commit($message);
@@ -92,6 +95,10 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
 
     private function getAuthor() {
         return $GLOBALS['USERINFO']['name'];
+    }
+
+    private function getAuthorMail() {
+        return $GLOBALS['USERINFO']['mail'];
     }
 
     public function handle_media_deletion(Doku_Event &$event, $param) {
@@ -126,10 +133,10 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
     public function handle_io_wikipage_write(Doku_Event &$event, $param) {
 
         $rev = $event->data[3];
-        
+
         /* On update to an existing page this event is called twice,
          * once for the transfer of the old version to the attic (rev will have a value)
-         * and once to write the new version of the page into the wiki (rev is false) 
+         * and once to write the new version of the page into the wiki (rev is false)
          */
         if (!$rev) {
 
@@ -162,7 +169,7 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
                 $msgTemplate
             );
 
-            $this->commitFile($pagePath,$message);        
+            $this->commitFile($pagePath,$message);
 
         }
 
