@@ -235,9 +235,11 @@ class git_exporter {
             }
 
             // per file action
-            $files = $repo->git('log -n 1 --name-status --pretty=format: '.escapeshellarg($rev));
-            $files = explode("\n", $files);
-            foreach ($files as $file) {
+            $listfile = $this->temp_dir.'/list.txt';
+            $files = $repo->git('log -n 1 --name-status --pretty=format: '.escapeshellarg($rev).' > '.escapeshellarg($listfile));
+            $lh = fopen($listfile, 'rb');
+            while (!feof($lh)) {
+                $file = rtrim(fgets($lh), "\r\n");
                 if (!$file) continue;
                 list($action, $file) = explode("\t", $file);
                 // pages
@@ -341,6 +343,7 @@ class git_exporter {
                     }
                 }
             }
+            fclose($lh);
         }
         fclose($hh);
 
