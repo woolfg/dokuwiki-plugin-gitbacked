@@ -114,7 +114,7 @@ class git_exporter {
 
         // init git repo
         $repo =& plugin_load('helper', 'gitbacked_git');
-        $repo->setGitRepo($this->git_dir, null, $this->git_branch);
+        $repo->setGitRepo($this->git_dir, $this->temp_dir.'/export', $this->git_branch);
 
         // clear original data
         print 'clear old data...'."\n";
