@@ -10,7 +10,7 @@ set_time_limit(0);  // included php codes had redefined this
 
 // handle options
 $short_opts = 'hr';
-$long_opts  = array('help', 'run', 'git-dir=', 'work-dir=', 'branch=', 'no-meta', 'keep-meta', 'quiet');
+$long_opts  = array('help', 'run', 'git-dir=', 'branch=', 'no-meta', 'keep-meta', 'quiet');
 
 $OPTS = Doku_Cli_Opts::getOptions(__FILE__, $short_opts, $long_opts);
 
@@ -30,11 +30,6 @@ $exporter = new git_exporter();
 // handle '--git-dir' option
 if ( $OPTS->has('git-dir') ) {
     $exporter->git_dir = getSuppliedArgument($OPTS, null, 'git-dir');
-}
-
-// handle '--work-dir' option
-if ( $OPTS->has('work-dir') ) {
-    $exporter->work_dir = getSuppliedArgument($OPTS, null, 'work-dir');
 }
 
 // handle '--branch' option
@@ -119,7 +114,7 @@ class git_exporter {
 
         // init git repo
         $repo =& plugin_load('helper', 'gitbacked_git');
-        $repo->setGitRepo($this->git_dir, $this->work_dir, $this->git_branch);
+        $repo->setGitRepo($this->git_dir, null, $this->git_branch);
 
         // clear original data
         print 'clear old data...'."\n";
