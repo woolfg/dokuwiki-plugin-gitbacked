@@ -206,7 +206,7 @@ class git_exporter {
                     case "page":
                         if (!$this->quiet) print "[$date] add meta entry: `$data_id'"."\n";
                         $content = implode("\t", $logline)."\n";
-                        $meta_file = (array_search("hide change", $commands) === false) ? metaFN($data_id, '.changes') : $this->backup->metaFN($data_id, '.changes') ;
+                        $meta_file = (array_search("hide change", $commands) === false) ? metaFN($data_id, '.changes') : $this->backup->metaFN($data_id, '.changes');
                         io_mkdir_p(dirname($meta_file));
                         file_put_contents($meta_file, $content, FILE_APPEND);
                         touch($meta_file, $date);
@@ -217,7 +217,7 @@ class git_exporter {
                     case "media":
                         if (!$this->quiet) print "[$date] add media_meta entry: `$data_id'"."\n";
                         $content = implode("\t", $logline)."\n";
-                        $meta_file = (array_search("hide change", $commands) === false) ? mediaMetaFN($data_id, '.changes') : $this->backup->mediaMetaFN($data_id, '.changes') ;
+                        $meta_file = (array_search("hide change", $commands) === false) ? mediaMetaFN($data_id, '.changes') : $this->backup->mediaMetaFN($data_id, '.changes');
                         io_mkdir_p(dirname($meta_file));
                         file_put_contents($meta_file, $content, FILE_APPEND);
                         touch($meta_file, $date);
@@ -270,7 +270,7 @@ class git_exporter {
                         if (!$this->quiet) print "[$date] add meta entry (external commit): `$data_id'"."\n";
                         $logline[3] = $data_id;  // replace $data_id
                         $content = implode("\t", $logline)."\n";
-                        $meta_file = (array_search("hide change", $commands) === false) ? metaFN($data_id, '.changes') : $this->backup->metaFN($data_id, '.changes') ;
+                        $meta_file = (array_search("hide change", $commands) === false) ? metaFN($data_id, '.changes') : $this->backup->metaFN($data_id, '.changes');
                         io_mkdir_p(dirname($meta_file));
                         file_put_contents($meta_file, $content, FILE_APPEND);
                         touch($meta_file, $date);
