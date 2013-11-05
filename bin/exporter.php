@@ -256,12 +256,13 @@ class git_exporter {
                         $logline[2] = DOKU_CHANGE_TYPE_EDIT;
                         // page
                         $page_file = wikiFN($data_id, null, false);
-                        $content = $repo->git('show '.escapeshellarg($rev).':'.escapeshellarg($file));
-                        io_writeWikiPage($page_file, $content, $data_id, $date);
+                        io_mkdir_p(dirname($page_file));
+                        $repo->git('show '.escapeshellarg($rev).':'.escapeshellarg($file).' > '.escapeshellarg($page_file));
                         touch($page_file, $date);
                         // attic
                         $attic_file = (array_search("hide data", $commands) === false) ? wikiFN($data_id, $date, false) : $this->backup->wikiFN($data_id, $date, false);
-                        io_writeWikiPage($attic_file, $content, $data_id, $date);  // content same as above
+                        io_mkdir_p(dirname($attic_file));
+                        $repo->git('show '.escapeshellarg($rev).':'.escapeshellarg($file).' > '.escapeshellarg($attic_file));
                         touch($attic_file, $date);
                     }
                     // if external commit, add meta entry for all edited pages
@@ -292,14 +293,13 @@ class git_exporter {
                         $logline[2] = DOKU_CHANGE_TYPE_EDIT;
                         // media
                         $media_file = mediaFN($data_id);
-                        $content = $repo->git('show '.escapeshellarg($rev).':'.escapeshellarg($file));
                         io_mkdir_p(dirname($media_file));
-                        file_put_contents($media_file, $content);
+                        $repo->git('show '.escapeshellarg($rev).':'.escapeshellarg($file).' > '.escapeshellarg($media_file));
                         touch($media_file, $date);
                         // attic
                         $attic_file = (array_search("hide data", $commands) === false) ? mediaFN($data_id, $date) : $this->backup->mediaFN($data_id, $date);
                         io_mkdir_p(dirname($attic_file));
-                        file_put_contents($attic_file, $content);  // content same as above
+                        $repo->git('show '.escapeshellarg($rev).':'.escapeshellarg($file).' > '.escapeshellarg($attic_file));
                         touch($attic_file, $date);
                     }
                     // if external commit, add meta entry for all edited media
@@ -322,8 +322,7 @@ class git_exporter {
                         if (!$this->quiet) print "[$date] add meta file (external commit): `$data_id'"."\n";
                         $meta_file = metaFN($data_id, '');
                         io_mkdir_p(dirname($meta_file));
-                        $content = $repo->git('show '.escapeshellarg($rev).':'.escapeshellarg($file));
-                        file_put_contents($meta_file, $content);
+                        $repo->git('show '.escapeshellarg($rev).':'.escapeshellarg($file).' > '.escapeshellarg($meta_file));
                         touch($meta_file, $date);
                     }
                 }
@@ -333,8 +332,7 @@ class git_exporter {
                         if (!$this->quiet) print "[$date] add media_meta file (external commit): `$data_id'"."\n";
                         $mediameta_file = mediaMetaFN($data_id, '');
                         io_mkdir_p(dirname($mediameta_file));
-                        $content = $repo->git('show '.escapeshellarg($rev).':'.escapeshellarg($file));
-                        file_put_contents($mediameta_file, $content);
+                        $repo->git('show '.escapeshellarg($rev).':'.escapeshellarg($file).' > '.escapeshellarg($mediameta_file));
                         touch($mediameta_file, $date);
                     }
                 }
