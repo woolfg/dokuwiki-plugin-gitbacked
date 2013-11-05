@@ -6,6 +6,7 @@ ini_set('memory_limit','128M');
 if(!defined('DOKU_INC')) define('DOKU_INC',realpath(dirname(__FILE__).'/../../../../').'/');
 require_once DOKU_INC.'inc/init.php';
 require_once DOKU_INC.'inc/cliopts.php';
+set_time_limit(0);  // included php codes had redefined this
 
 // handle options
 $short_opts = 'hr';
