@@ -106,8 +106,8 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
         $mediaName = $event->data['name'];
 
         $message = str_replace(
-            array('%media%','%user%'),
-            array($mediaName,$this->getAuthor()),
+            array('%media%','%user%','%nl%'),
+            array($mediaName,$this->getAuthor(),"\n"),
             $this->getConf('commitMediaMsgDel')
         );
 
@@ -121,8 +121,8 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
         $mediaName = $event->data[2];
 
         $message = str_replace(
-            array('%media%','%user%','%mail%'),
-            array($mediaName,$this->getAuthor(),$this->getAuthorMail()),
+            array('%media%','%user%','%mail%','%nl%'),
+            array($mediaName,$this->getAuthor(),$this->getAuthorMail(),"\n"),
             $this->getConf('commitMediaMsg')
         );
 
@@ -167,8 +167,8 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
             }
 
             $message = str_replace(
-                array('%fullpage%','%pagens%','%page%','%summary%','%user%','%mail%'),
-                array($fullPageName,$pageNsPath,$pageName,$editSummary,$this->getAuthor(),$this->getAuthorMail()),
+                array('%fullpage%','%pagens%','%page%','%summary%','%user%','%mail%','%nl%'),
+                array($fullPageName,$pageNsPath,$pageName,$editSummary,$this->getAuthor(),$this->getAuthorMail(),"\n"),
                 //array($pageName,$editSummary,$this->getAuthor(),$this->getAuthorMail()),
                 $msgTemplate
             );
