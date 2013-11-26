@@ -75,6 +75,12 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
         if ($params) {
             $repo->git_path .= ' '.$params;
         }
+        foreach($this->getConf('envParams') as $e) {
+            $p = strpos($e, '=');
+            $k = substr($e,0,$p);
+            $v = substr($e,$p+1);
+            $repo->setenv($k,$v);
+        }
         return $repo;
     }
 
@@ -106,8 +112,8 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
         $mediaName = $event->data['name'];
 
         $message = str_replace(
-            array('%media%','%user%'),
-            array($mediaName,$this->getAuthor()),
+            array('%media%','%user%','%mail%','%nl%'),
+            array($mediaName,$this->getAuthor(),$this->getAuthorMail(),"\n"),
             $this->getConf('commitMediaMsgDel')
         );
 
@@ -121,8 +127,8 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
         $mediaName = $event->data[2];
 
         $message = str_replace(
-            array('%media%','%user%'),
-            array($mediaName,$this->getAuthor()),
+            array('%media%','%user%','%mail%','%nl%'),
+            array($mediaName,$this->getAuthor(),$this->getAuthorMail(),"\n"),
             $this->getConf('commitMediaMsg')
         );
 
@@ -140,9 +146,12 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
          */
         if (!$rev) {
 
-            $pagePath = $event->data[0][0];
+            $pageFsPath = $event->data[0][0];
+            $pageNsPath = $event->data[1];
             $pageName = $event->data[2];
             $pageContent = $event->data[0][1];
+
+            $fullPageName = str_replace(':', '/', $pageNsPath).'/'.$pageName;
 
             // get the summary directly from the form input
             // as the metadata hasn't updated yet
@@ -156,7 +165,7 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
                 // bad hack as DokuWiki deletes the file after this event
                 // thus, let's delete the file by ourselves, so git can recognize the deletion
                 // DokuWiki uses @unlink as well, so no error should be thrown if we delete it twice
-                @unlink($pagePath);
+                @unlink($pageFsPath);
 
             } else {
                 //get the commit text for edits
@@ -164,12 +173,13 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
             }
 
             $message = str_replace(
-                array('%page%','%summary%','%user%'),
-                array($pageName,$editSummary,$this->getAuthor()),
+                array('%fullpage%','%pagens%','%page%','%summary%','%user%','%mail%','%nl%'),
+                array($fullPageName,$pageNsPath,$pageName,$editSummary,$this->getAuthor(),$this->getAuthorMail(),"\n"),
+                //array($pageName,$editSummary,$this->getAuthor(),$this->getAuthorMail()),
                 $msgTemplate
             );
 
-            $this->commitFile($pagePath,$message);
+            $this->commitFile($pageFsPath,$message);
 
         }
 

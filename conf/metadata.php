@@ -15,4 +15,5 @@ $meta['commitMediaMsgDel'] = array('string');
 $meta['repoPath'] = array('string');
 $meta['repoWorkDir'] = array('string');
 $meta['addParams'] = array('string');
+$meta['envParams'] = array('array');
 

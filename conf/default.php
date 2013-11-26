@@ -15,3 +15,4 @@ $conf['commitMediaMsgDel']	= 'Wiki media %media% deleted by %user%';
 $conf['repoPath']	= $GLOBALS['conf']['savedir'];
 $conf['repoWorkDir']	= $GLOBALS['conf']['savedir'];
 $conf['addParams'] = '';
+$conf['envParams'] = '';
