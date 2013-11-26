@@ -75,6 +75,12 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
         if ($params) {
             $repo->git_path .= ' '.$params;
         }
+        foreach($this->getConf('envParams') as $e) {
+            $p = strpos($e, '=');
+            $k = substr($e,0,$p);
+            $v = substr($e,$p+1);
+            $repo->setenv($k,$v);
+        }
         return $repo;
     }
 
