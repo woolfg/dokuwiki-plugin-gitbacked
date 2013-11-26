@@ -1,0 +1,5 @@
+#!/bin/sh
+# If you set gitbacked plugin envParams with:
+# GIT_SSH=.../lib/plugins/gitbacked/bin/git-ssh-wrapper,SSH_PRIVKEY=.../dokuwiki-gitbacked-ssh-key.priv
+# Then you do not need to muck with your user's ssh config
+exec ssh ${SSH_PRIVKEY:+-i $SSH_PRIVKEY} -T "$@"
