@@ -112,8 +112,8 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
         $mediaName = $event->data['name'];
 
         $message = str_replace(
-            array('%media%','%user%','%nl%'),
-            array($mediaName,$this->getAuthor(),"\n"),
+            array('%media%','%user%','%mail%','%nl%'),
+            array($mediaName,$this->getAuthor(),$this->getAuthorMail(),"\n"),
             $this->getConf('commitMediaMsgDel')
         );
 
