@@ -104,6 +104,7 @@ class Git {
 class GitRepo {
 
 	protected $repo_path = null;
+	protected $envopts = array();
 
 	/**
 	 * Create a new git repository
@@ -230,7 +231,9 @@ class GitRepo {
 			2 => array('pipe', 'w'),
 		);
 		$pipes = array();
-		$resource = proc_open($command, $descriptorspec, $pipes, $this->repo_path);
+		$env = array_merge($_ENV, $this->envopts);
+		$cwd = $this->repo_path;
+		$resource = proc_open($command, $descriptorspec, $pipes, $cwd, $env);
 
 		$stdout = stream_get_contents($pipes[1]);
 		$stderr = stream_get_contents($pipes[2]);
@@ -522,6 +525,16 @@ class GitRepo {
 	 */
 	public function get_description() {
 		return file_get_contents($this->repo_path."/.git/description");
+	}
+
+	/**
+	 * Sets custom environment options for calling Git
+	 *
+	 * @param string key
+	 * @param string value
+	 */
+	public function setenv($key, $value) {
+		$envopts[$key] = $value;
 	}
 	
 }
