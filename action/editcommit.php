@@ -32,32 +32,6 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
         $controller->register_hook('DOKUWIKI_DONE', 'AFTER', $this, 'handle_periodic_pull');
     }
 
-    public function handle_periodic_pull(Doku_Event &$event, $param) {
-        if ($this->getConf('periodicPull')) {
-            $lastPullFile = $this->temp_dir.'/lastpull.txt';
-            //check if the lastPullFile exists
-            if (is_file($lastPullFile)) {
-                $lastPull = unserialize(file_get_contents($lastPullFile));
-            } else {
-                $lastPull = 0;
-            }
-            //calculate time between pulls in seconds
-            $timeToWait = $this->getConf('periodicMinutes')*60;
-            $now = time();
-
-            //if it is time to run a pull request
-            if ($lastPull+$timeToWait < $now) {
-                $repo = $this->initRepo();
-
-                //execute the pull request
-                $repo->pull('origin',$repo->active_branch());
-
-                //save the current time to the file to track the last pull execution
-                file_put_contents($lastPullFile,serialize(time()));
-            }
-        }
-    }
-
     private function initRepo() {
         //get path to the repo root (by default DokuWiki's savedir)
         $repoPath = DOKU_INC.$this->getConf('repoPath');
@@ -99,6 +73,32 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
 
     private function getAuthorMail() {
         return $GLOBALS['USERINFO']['mail'];
+    }
+
+    public function handle_periodic_pull(Doku_Event &$event, $param) {
+        if ($this->getConf('periodicPull')) {
+            $lastPullFile = $this->temp_dir.'/lastpull.txt';
+            //check if the lastPullFile exists
+            if (is_file($lastPullFile)) {
+                $lastPull = unserialize(file_get_contents($lastPullFile));
+            } else {
+                $lastPull = 0;
+            }
+            //calculate time between pulls in seconds
+            $timeToWait = $this->getConf('periodicMinutes')*60;
+            $now = time();
+
+            //if it is time to run a pull request
+            if ($lastPull+$timeToWait < $now) {
+                $repo = $this->initRepo();
+
+                //execute the pull request
+                $repo->pull('origin',$repo->active_branch());
+
+                //save the current time to the file to track the last pull execution
+                file_put_contents($lastPullFile,serialize(time()));
+            }
+        }
     }
 
     public function handle_media_deletion(Doku_Event &$event, $param) {
