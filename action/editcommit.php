@@ -34,7 +34,11 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
 
     private function initRepo() {
         //get path to the repo root (by default DokuWiki's savedir)
-        $repoPath = DOKU_INC.$this->getConf('repoPath');
+        if(defined('DOKU_FARM')) {
+            $repoPath = $this->getConf('repoPath');
+        } else {
+            $repoPath = DOKU_INC.$this->getConf('repoPath');
+        }
         //init the repo and create a new one if it is not present
         io_mkdir_p($repoPath);
         $repo = new GitRepo($repoPath, true, true);
