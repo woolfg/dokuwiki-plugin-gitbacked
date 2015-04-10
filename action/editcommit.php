@@ -56,18 +56,34 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
         return $repo;
     }
 
+	private function isIgnored($filePath) {
+		$ignore = false;
+		$ignorePaths = trim($this->getConf('ignorePaths'));
+		if ($ignorePaths !== '') {
+			$paths = explode(',',$ignorePaths);
+			foreach($paths as $path) {
+				if (strstr($filePath,$path)) {
+					$ignore = true;
+				}
+			}
+		}
+		return $ignore;
+	}
+
     private function commitFile($filePath,$message) {
 
-        $repo = $this->initRepo();
+		if (!$this->isIgnored($filePath)) {
+			$repo = $this->initRepo();
 
-        //add the changed file and set the commit message
-        $repo->add($filePath);
-        $repo->commit($message);
+			//add the changed file and set the commit message
+			$repo->add($filePath);
+			$repo->commit($message);
 
-        //if the push after Commit option is set we push the active branch to origin
-        if ($this->getConf('pushAfterCommit')) {
-            $repo->push('origin',$repo->active_branch());
-        }
+			//if the push after Commit option is set we push the active branch to origin
+			if ($this->getConf('pushAfterCommit')) {
+				$repo->push('origin',$repo->active_branch());
+			}
+		}
 
     }
 
