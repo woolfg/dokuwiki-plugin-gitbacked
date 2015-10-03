@@ -48,7 +48,7 @@ class Git {
 	public static function get_bin() {
 		return self::$bin;
 	}
-	
+
 	/**
 	 * Sets up library for use in a default Windows environment
 	 */
@@ -82,20 +82,21 @@ class Git {
 	public static function open($repo_path) {
 		return new GitRepo($repo_path);
 	}
-	
+
 	/**
 	 * Clones a remote repo into a directory and then returns a GitRepo object
 	 * for the newly created local repo
-	 * 
+	 *
 	 * Accepts a creation path and a remote to clone from
-	 * 
+	 *
 	 * @access  public
 	 * @param   string  repository path
 	 * @param   string  remote source
+	 * @param   string  reference path
 	 * @return  GitRepo
 	 **/
-	public static function &clone_remote($repo_path, $remote) {
-		return GitRepo::create_new($repo_path, $remote, true);
+	public static function &clone_remote($repo_path, $remote, $reference = null) {
+		return GitRepo::create_new($repo_path, $remote, true, $reference);
 	}
 
 	/**
@@ -137,16 +138,23 @@ class GitRepo {
 	 * @access  public
 	 * @param   string  repository path
 	 * @param   string  directory to source
+	 * @param   string  reference path
 	 * @return  GitRepo
 	 */
-	public static function &create_new($repo_path, $source = null, $remote_source = false) {
+	public static function &create_new($repo_path, $source = null, $remote_source = false, $reference = null) {
 		if (is_dir($repo_path) && file_exists($repo_path."/.git") && is_dir($repo_path."/.git")) {
 			throw new Exception('"'.$repo_path.'" is already a git repository');
 		} else {
 			$repo = new self($repo_path, true, false);
 			if (is_string($source)) {
 				if ($remote_source) {
-					$repo->clone_remote($source);
+					if (!is_dir($reference) || !is_dir($reference.'/.git')) {
+						throw new Exception('"'.$reference.'" is not a git repository. Cannot use as reference.');
+					} else if (strlen($reference)) {
+						$reference = realpath($reference);
+						$reference = "--reference $reference";
+					}
+					$repo->clone_remote($source, $reference);
 				} else {
 					$repo->clone_from($source);
 				}
@@ -227,6 +235,16 @@ class GitRepo {
 				}
 			}
 		}
+	}
+
+	/**
+	 * Get the path to the git repo directory (eg. the ".git" directory)
+	 * 
+	 * @access public
+	 * @return string
+	 */
+	public function git_directory_path() {
+		return ($this->bare) ? $this->repo_path : $this->repo_path."/.git";
 	}
 
 	/**
@@ -318,7 +336,7 @@ class GitRepo {
 	 * Runs a 'git status' call
 	 *
 	 * Accept a convert to HTML bool
-	 * 
+	 *
 	 * @access public
 	 * @param bool  return string with <br />
 	 * @return string
@@ -346,7 +364,7 @@ class GitRepo {
 		}
 		return $this->run("add $files -v");
 	}
-	
+
 	/**
 	 * Runs a `git rm` call
 	 *
@@ -372,10 +390,12 @@ class GitRepo {
 	 *
 	 * @access  public
 	 * @param   string  commit message
+	 * @param   boolean  should all files be committed automatically (-a flag)
 	 * @return  string
 	 */
-	public function commit($message = "") {
-		return $this->run("commit -av -m ".escapeshellarg($message));
+	public function commit($message = "", $commit_all = true) {
+		$flags = $commit_all ? '-av' : '-v';
+		return $this->run("commit ".$flags." -m ".escapeshellarg($message));
 	}
 
 	/**
@@ -414,10 +434,11 @@ class GitRepo {
 	 *
 	 * @access  public
 	 * @param   string  source url
+	 * @param   string  reference path
 	 * @return  string
 	 */
-	public function clone_remote($source) {
-		return $this->run("clone $source ".$this->repo_path);
+	public function clone_remote($source, $reference) {
+		return $this->run("clone $reference $source ".$this->repo_path);
 	}
 
 	/**
@@ -569,7 +590,7 @@ class GitRepo {
 		if ($message === null) {
 			$message = $tag;
 		}
-		return $this->run("tag -a $tag -m $message");
+		return $this->run("tag -a $tag -m " . escapeshellarg($message));
 	}
 
 	/**
@@ -620,12 +641,26 @@ class GitRepo {
 	}
 
 	/**
+	 * List log entries.
+	 *
+	 * @param strgin $format
+	 * @return string
+	 */
+	public function log($format = null) {
+		if ($format === null)
+			return $this->run('log');
+		else
+			return $this->run('log --pretty=format:"' . $format . '"');
+	}
+
+	/**
 	 * Sets the project description.
 	 *
 	 * @param string $new
 	 */
 	public function set_description($new) {
-		file_put_contents($this->repo_path."/.git/description", $new);
+		$path = $this->git_directory_path();
+		file_put_contents($path."/description", $new);
 	}
 
 	/**
@@ -634,7 +669,8 @@ class GitRepo {
 	 * @return string
 	 */
 	public function get_description() {
-		return file_get_contents($this->repo_path."/.git/description");
+		$path = $this->git_directory_path();
+		return file_get_contents($path."/description");
 	}
 
 	/**
@@ -650,4 +686,3 @@ class GitRepo {
 }
 
 /* End of file */
-

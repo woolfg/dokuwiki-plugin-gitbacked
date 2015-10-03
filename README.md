@@ -1,4 +1,4 @@
-gitbacked Plugin for DokuWiki
+# gitbacked Plugin for DokuWiki
 
 Store/Sync pages and media files in a git repository
 
@@ -6,13 +6,14 @@ All documentation for this plugin can be found at
 http://www.dokuwiki.org/plugin:gitbacked
 
 If you install this plugin manually, make sure it is installed in
-lib/plugins/gitbacked/ - if the folder is called different it
+`lib/plugins/gitbacked/` - if the folder is called different it
 will not work!
 
 Please refer to http://www.dokuwiki.org/plugins for additional info
 on how to install plugins in DokuWiki.
 
-----
+## License
+
 Copyright (C) Wolfgang Gassler <wolfgang@gassler.org>
 
 This program is free software; you can redistribute it and/or modify
