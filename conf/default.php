@@ -14,5 +14,6 @@ $conf['commitMediaMsg']	= 'Wiki media %media% uploaded by %user%';
 $conf['commitMediaMsgDel']	= 'Wiki media %media% deleted by %user%';
 $conf['repoPath'] = $GLOBALS['conf']['savedir'];
 $conf['repoWorkDir'] = $GLOBALS['conf']['savedir'];
+$conf['gitPath'] = '';
 $conf['addParams'] = '';
 $conf['ignorePaths'] = '';

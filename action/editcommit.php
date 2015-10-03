@@ -39,6 +39,11 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
         } else {
             $repoPath = DOKU_INC.$this->getConf('repoPath');
         }
+        //set the path to the git binary
+        $gitPath = trim($this->getConf('gitPath'));
+        if ($gitPath !== '') {
+            Git::set_bin($gitPath);
+        }
         //init the repo and create a new one if it is not present
         io_mkdir_p($repoPath);
         $repo = new GitRepo($repoPath, true, true);
