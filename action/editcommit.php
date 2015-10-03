@@ -44,14 +44,14 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
         $repo = new GitRepo($repoPath, true, true);
         //set git working directory (by default DokuWiki's savedir)
         $repoWorkDir = DOKU_INC.$this->getConf('repoWorkDir');
-        $repo->git_path .= ' --work-tree '.escapeshellarg($repoWorkDir);
+        Git::set_bin(Git::get_bin().' --work-tree '.escapeshellarg($repoWorkDir));
 
         $params = str_replace(
             array('%mail%','%user%'),
             array($this->getAuthorMail(),$this->getAuthor()),
             $this->getConf('addParams'));
         if ($params) {
-            $repo->git_path .= ' '.$params;
+            Git::set_bin(Git::get_bin().' '.$params);
         }
         return $repo;
     }
