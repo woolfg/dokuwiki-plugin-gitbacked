@@ -1,5 +1,5 @@
 base   gitbacked
-author Wolfgang Gassler
+author Wolfgang Gassler (@woolfg), Carsten Teibes (@carstene1ns)
 email  wolfgang@gassler.org
 date   2015-10-03
 name   gitbacked plugin
