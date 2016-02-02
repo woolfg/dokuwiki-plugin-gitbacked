@@ -24,7 +24,7 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
         io_mkdir_p($this->temp_dir);
     }
 
-    public function register(Doku_Event_Handler &$controller) {
+    public function register(Doku_Event_Handler $controller) {
 
         $controller->register_hook('IO_WIKIPAGE_WRITE', 'AFTER', $this, 'handle_io_wikipage_write');
         $controller->register_hook('MEDIA_UPLOAD_FINISH', 'AFTER', $this, 'handle_media_upload');
