@@ -119,6 +119,8 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
 
                 //execute the pull request
                 $repo->pull('origin',$repo->active_branch());
+		//after pulling in changes, push local changes to the remote    
+		$repo->push('origin',$repo->active_branch());
 
                 //save the current time to the file to track the last pull execution
                 file_put_contents($lastPullFile,serialize(time()));
