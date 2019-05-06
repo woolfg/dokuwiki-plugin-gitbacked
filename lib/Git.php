@@ -637,7 +637,7 @@ class GitRepo {
 	 * @return string
 	 */
 	public function pull($remote, $branch) {
-		return $this->run("pull $remote $branch");
+		return $this->run("pull --rebase $remote $branch");
 	}
 
 	/**

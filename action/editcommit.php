@@ -29,7 +29,7 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
         $controller->register_hook('IO_WIKIPAGE_WRITE', 'AFTER', $this, 'handle_io_wikipage_write');
         $controller->register_hook('MEDIA_UPLOAD_FINISH', 'AFTER', $this, 'handle_media_upload');
         $controller->register_hook('MEDIA_DELETE_FILE', 'AFTER', $this, 'handle_media_deletion');
-        $controller->register_hook('DOKUWIKI_DONE', 'AFTER', $this, 'handle_periodic_pull');
+        $controller->register_hook('DOKUWIKI_DONE', 'AFTER', $this, 'handle_periodic_pull_with_push');
     }
 
     private function initRepo() {
@@ -100,7 +100,7 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
         return $GLOBALS['USERINFO']['mail'];
     }
 
-    public function handle_periodic_pull(Doku_Event &$event, $param) {
+    public function handle_periodic_pull_with_push(Doku_Event &$event, $param) {
         if ($this->getConf('periodicPull')) {
             $lastPullFile = $this->temp_dir.'/lastpull.txt';
             //check if the lastPullFile exists
@@ -119,8 +119,8 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
 
                 //execute the pull request
                 $repo->pull('origin',$repo->active_branch());
-		//after pulling in changes, push local changes to the remote    
-		$repo->push('origin',$repo->active_branch());
+                //after pulling in changes, push local changes to the remote
+                $repo->push('origin',$repo->active_branch());
 
                 //save the current time to the file to track the last pull execution
                 file_put_contents($lastPullFile,serialize(time()));
