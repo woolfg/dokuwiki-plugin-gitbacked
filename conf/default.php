@@ -17,3 +17,5 @@ $conf['repoWorkDir'] = $GLOBALS['conf']['savedir'];
 $conf['gitPath'] = '';
 $conf['addParams'] = '';
 $conf['ignorePaths'] = '';
+$conf['emailAddressOnError'] = '';
+$conf['notifyByMailOnSuccess'] = 0;

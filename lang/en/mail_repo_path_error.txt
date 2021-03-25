@@ -1,0 +1,13 @@
+==== An FAILURE with the Git repo path occurred on @DOKUWIKIURL@ ====
+
+  * **Repo path:** <code>@GIT_REPO_PATH@</code>
+
+  * **Error:** <code>@GIT_ERROR_MESSAGE@</code>
+  
+  * **User:** <code>@NAME@</code>
+  
+  * **eMail:** <code>@MAIL@</code>
+  
+  * **Browser:** <code>@BROWSER@</code>
+  
+  * **Wiki:** <code>@TITLE@ @DOKUWIKIURL@</code>

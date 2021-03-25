@@ -46,7 +46,7 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
         }
         //init the repo and create a new one if it is not present
         io_mkdir_p($repoPath);
-        $repo = new GitRepo($repoPath, true, true);
+        $repo = new GitRepo($repoPath, $this, true, true);
         //set git working directory (by default DokuWiki's savedir)
         $repoWorkDir = DOKU_INC.$this->getConf('repoWorkDir');
         Git::set_bin(Git::get_bin().' --work-tree '.escapeshellarg($repoWorkDir));
@@ -76,20 +76,25 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
 	}
 
     private function commitFile($filePath,$message) {
-
 		if (!$this->isIgnored($filePath)) {
-			$repo = $this->initRepo();
+			try {
+				$repo = $this->initRepo();
 
-			//add the changed file and set the commit message
-			$repo->add($filePath);
-			$repo->commit($message);
+				//add the changed file and set the commit message
+				$repo->add($filePath);
+				$repo->commit($message);
 
-			//if the push after Commit option is set we push the active branch to origin
-			if ($this->getConf('pushAfterCommit')) {
-				$repo->push('origin',$repo->active_branch());
+				//if the push after Commit option is set we push the active branch to origin
+				if ($this->getConf('pushAfterCommit')) {
+					$repo->push('origin',$repo->active_branch());
+				}
+			} catch (Exception $e) {
+				if (!$this->isNotifyByEmailOnGitCommandError()) {
+					throw new Exception('Git committing or pushing failed: '.$e->getMessage(), 1, $e);
+				}
+				return;
 			}
 		}
-
     }
 
     private function getAuthor() {
@@ -115,10 +120,17 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
 
             //if it is time to run a pull request
             if ($lastPull+$timeToWait < $now) {
-                $repo = $this->initRepo();
+				try {
+                	$repo = $this->initRepo();
 
-                //execute the pull request
-                $repo->pull('origin',$repo->active_branch());
+                	//execute the pull request
+                	$repo->pull('origin',$repo->active_branch());
+				} catch (Exception $e) {
+					if (!$this->isNotifyByEmailOnGitCommandError()) {
+						throw new Exception('Git command failed to perform periodic pull: '.$e->getMessage(), 2, $e);
+					}
+					return;
+				}
 
                 //save the current time to the file to track the last pull execution
                 file_put_contents($lastPullFile,serialize(time()));
@@ -197,8 +209,139 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
             $this->commitFile($pagePath,$message);
 
         }
-
     }
+	
+	// ====== Error notification helpers ======
+	/**
+	 * Notifies error on create_new
+	 *
+	 * @access  public
+	 * @param   string  repository path
+	 * @param   string  reference path / remote reference
+	 * @param   string  error message
+	 * @return  bool
+	 */
+	public function notify_create_new_error($repo_path, $reference, $error_message) {
+		$template_replacements = array(
+			'GIT_REPO_PATH' => $repo_path,
+			'GIT_REFERENCE' => (empty($reference) ? 'n/a' : $reference),
+			'GIT_ERROR_MESSAGE' => $error_message
+		);
+		return $this->notifyByMail('mail_create_new_error_subject', 'mail_create_new_error', $template_replacements);
+	}	
+
+	/**
+	 * Notifies error on setting repo path
+	 *
+	 * @access  public
+	 * @param   string  repository path
+	 * @param   string  error message
+	 * @return  bool
+	 */
+	public function notify_repo_path_error($repo_path, $error_message) {
+		$template_replacements = array(
+			'GIT_REPO_PATH' => $repo_path,
+			'GIT_ERROR_MESSAGE' => $error_message
+		);
+		return $this->notifyByMail('mail_repo_path_error_subject', 'mail_repo_path_error', $template_replacements);
+	}	
+
+	/**
+	 * Notifies error on git command
+	 *
+	 * @access  public
+	 * @param   string  repository path
+	 * @param   string  current working dir
+	 * @param   string  command line
+	 * @param   int     exit code of command (status)
+	 * @param   string  error message
+	 * @return  bool
+	 */
+	public function notify_command_error($repo_path, $cwd, $command, $status, $error_message) {
+		$template_replacements = array(
+			'GIT_REPO_PATH' => $repo_path,
+			'GIT_CWD' => $cwd,
+			'GIT_COMMAND' => $command,
+			'GIT_COMMAND_EXITCODE' => $status,
+			'GIT_ERROR_MESSAGE' => $error_message		
+		);
+		return $this->notifyByMail('mail_command_error_subject', 'mail_command_error', $template_replacements);
+	}
+
+	/**
+	 * Notifies success on git command
+	 *
+	 * @access  public
+	 * @param   string  repository path
+	 * @param   string  current working dir
+	 * @param   string  command line
+	 * @return  bool
+	 */
+	public function notify_command_success($repo_path, $cwd, $command) {
+		if (!$this->getConf('notifyByMailOnSuccess')) {
+			return false;
+		}
+		$template_replacements = array(
+			'GIT_REPO_PATH' => $repo_path,
+			'GIT_CWD' => $cwd,
+			'GIT_COMMAND' => $command
+		);
+		return $this->notifyByMail('mail_command_success_subject', 'mail_command_success', $template_replacements);
+	}
+
+	/**
+	 * Send an eMail, if eMail address is configured
+	 *
+	 * @access  public
+	 * @param   string  lang id for the subject
+	 * @param   string  lang id for the template(.txt)
+	 * @param   array   array of replacements
+	 * @return  bool
+	 */
+	public function notifyByMail($subject_id, $template_id, $template_replacements) {
+		$ret = false;
+		dbglog("GitBacked - notifyByMail: [subject_id=".$subject_id.", template_id=".$template_id.", template_replacements=".$template_replacements."]");
+		if (!$this->isNotifyByEmailOnGitCommandError()) {
+			return $ret;
+		}	
+		//$template_text = rawLocale($template_id); // this works for core artifacts only - not for plugins
+		$template_filename = $this->localFN($template_id);
+        $template_text = file_get_contents($template_filename);
+		$template_html = $this->render_text($template_text);
+
+		$mailer = new \Mailer();
+		$mailer->to($this->getEmailAddressOnErrorConfigured());
+		dbglog("GitBacked - lang check['".$subject_id."']: ".$this->getLang($subject_id));
+		dbglog("GitBacked - template text['".$template_id."']: ".$template_text);
+		dbglog("GitBacked - template html['".$template_id."']: ".$template_html);
+		$mailer->subject($this->getLang($subject_id));
+		$mailer->setBody($template_text, $template_replacements, null, $template_html);
+		$ret = $mailer->send();
+		
+        return $ret;
+	}
+	
+	/**
+	 * Check, if eMail is to be sent on a Git command error.
+	 *
+	 * @access  public
+	 * @return  bool
+	 */
+	public function isNotifyByEmailOnGitCommandError() {
+		$emailAddressOnError = $this->getEmailAddressOnErrorConfigured();
+		return !empty($emailAddressOnError);
+	}
+	
+	/**
+	 * Get the eMail address configured for notifications.
+	 *
+	 * @access  public
+	 * @return  string
+	 */
+	public function getEmailAddressOnErrorConfigured() {
+		$emailAddressOnError = trim($this->getConf('emailAddressOnError'));
+		return $emailAddressOnError;
+	}
 
 }
 

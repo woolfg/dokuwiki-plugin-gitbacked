@@ -1,0 +1,15 @@
+==== The following Git command was performed on @DOKUWIKIURL@ ====
+
+  * **Repo path:** <code>@GIT_REPO_PATH@</code>
+
+  * **Current working dir:** <code>@GIT_CWD@</code>
+
+  * **Command:** <code>@GIT_COMMAND@</code>
+  
+  * **User:** <code>@NAME@</code>
+  
+  * **eMail:** <code>@MAIL@</code>
+  
+  * **Browser:** <code>@BROWSER@</code>
+  
+  * **Wiki:** <code>@TITLE@ @DOKUWIKIURL@</code>

@@ -1,0 +1,15 @@
+==== The creation of a new Git repo FAILED on @DOKUWIKIURL@ ====
+
+  * **Repo path:** <code>@GIT_REPO_PATH@</code>
+
+  * **Reference:** <code>@GIT_REFERENCE@</code>
+
+  * **Error:** <code>@GIT_ERROR_MESSAGE@</code>
+  
+  * **User:** <code>@NAME@</code>
+  
+  * **eMail:** <code>@MAIL@</code>
+  
+  * **Browser:** <code>@BROWSER@</code>
+  
+  * **Wiki:** <code>@TITLE@ @DOKUWIKIURL@</code>
