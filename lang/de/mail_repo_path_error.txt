@@ -1,0 +1,13 @@
+==== Ein FEHLER mit dem konfigurierten Git Repository Pfad ist aufgetreten auf @DOKUWIKIURL@ ====
+
+  * **Repo Pfad:** <code>@GIT_REPO_PATH@</code>
+
+  * **Fehler:** <code>@GIT_ERROR_MESSAGE@</code>
+  
+  * **Anwender:** <code>@NAME@</code>
+  
+  * **eMail:** <code>@MAIL@</code>
+  
+  * **Browser:** <code>@BROWSER@</code>
+  
+  * **Wiki:** <code>@TITLE@ @DOKUWIKIURL@</code>

@@ -1,0 +1,15 @@
+==== Der folgende Git Befehl wurde ausgeführt auf @DOKUWIKIURL@ ====
+
+  * **Repo Pfad:** <code>@GIT_REPO_PATH@</code>
+
+  * **Aktuelles Arbeitsverzeichnis:** <code>@GIT_CWD@</code>
+
+  * **Befehl:** <code>@GIT_COMMAND@</code>
+  
+  * **Anwender:** <code>@NAME@</code>
+  
+  * **eMail:** <code>@MAIL@</code>
+  
+  * **Browser:** <code>@BROWSER@</code>
+  
+  * **Wiki:** <code>@TITLE@ @DOKUWIKIURL@</code>

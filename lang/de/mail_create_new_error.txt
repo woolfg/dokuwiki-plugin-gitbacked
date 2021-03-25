@@ -1,0 +1,15 @@
+==== FEHLER beim Anlegen eines neuen Git Repositories auf @DOKUWIKIURL@ ====
+
+  * **Repo Pfad:** <code>@GIT_REPO_PATH@</code>
+
+  * **Referenz:** <code>@GIT_REFERENCE@</code>
+
+  * **Fehler:** <code>@GIT_ERROR_MESSAGE@</code>
+  
+  * **Anwender:** <code>@NAME@</code>
+  
+  * **eMail:** <code>@MAIL@</code>
+  
+  * **Browser:** <code>@BROWSER@</code>
+  
+  * **Wiki:** <code>@TITLE@ @DOKUWIKIURL@</code>
