@@ -18,5 +18,5 @@ $lang['repoWorkDir']	= 'Path of the git working tree, must contain "pages" and "
 $lang['gitPath'] = 'Path to the git binary (if empty, the default "/usr/bin/git" will be used)';
 $lang['addParams'] = 'Additional git parameters (added to the git execution command) (%user% and %mail% are replaced by the corresponding values)';
 $lang['ignorePaths'] = 'Paths/files which are ignored and not added to git (comma-separated)';
-$lang['emailAddressOnError'] = 'If set, an eMail will be sent to this address with context details and error message rather than confusing the end user by the Exception raised';
+$lang['emailAddressOnError'] = 'If set, in case of a git error an eMail will be sent to this address rather than confusing the end user by the Exception raised. Multiple mail addresses can be configured comma separated';
 $lang['notifyByMailOnSuccess'] = 'If <code>emailAddressOnError</code> is defined, an eMail will be sent on any git commit. This is supposed to be used for eMail notification test purposes only';

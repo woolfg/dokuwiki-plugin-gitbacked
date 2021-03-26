@@ -18,5 +18,5 @@ $lang['repoWorkDir']	= 'Pfad des git working tree. Dieser muss die "pages" and "
 $lang['gitPath'] = 'Pfad zum git binary (Wenn leer, dann wird der Standard "/usr/bin/git" verwendet)';
 $lang['addParams'] = 'Zusätzliche git Parameter (diese werden dem git Kommando zugefügt) (%user% und %mail% werden durch die tatsächlichen Werte ersetzt)';
 $lang['ignorePaths'] = 'Pfade/Dateien die ignoriert werden und nicht von git archiviert werden sollen (durch Kommata getrennt)';
-$lang['emailAddressOnError'] = 'Wenn definiert, dann wird bei einem Fehler eine eMail an diese Adresse gesendet mit detaillierter Kontext Information und der git Fehlermeldung, anstatt den aktuellen Endanwender mit einer Exception zu verunsichern';
+$lang['emailAddressOnError'] = 'Wenn definiert, dann wird bei einem Fehler eine eMail an diese Adresse(n) gesendet, anstatt den aktuellen Endanwender mit einer Exception zu verunsichern. Mehrere Adressen können durch Kommata getrennt konfiguriert werden';
 $lang['notifyByMailOnSuccess'] = 'Wenn <code>emailAddressOnError</code> definiert ist, dann wird bei jedem Commit eine eMail gesendet. Diese Einstellung sollte nur zum Testen der eMail Benachrichtigung aktiviert werden';

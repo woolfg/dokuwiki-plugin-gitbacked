@@ -154,15 +154,13 @@ class GitRepo {
 	 */
 	public static function &create_new($repo_path, \action_plugin_gitbacked_editcommit $plugin = null, $source = null, $remote_source = false, $reference = null) {
 		if (is_dir($repo_path) && file_exists($repo_path."/.git") && is_dir($repo_path."/.git")) {
-			self::handle_create_new_error($repo_path, $reference, '"'.$repo_path.'" is already a git repository', $plugin);
-			return null;
+			throw new Exception(self::handle_create_new_error($repo_path, $reference, '"'.$repo_path.'" is already a git repository', $plugin));
 		} else {
 			$repo = new self($repo_path, $plugin, true, false);
 			if (is_string($source)) {
 				if ($remote_source) {
 					if (!is_dir($reference) || !is_dir($reference.'/.git')) {
-						self::handle_create_new_error($repo_path, $reference, '"'.$reference.'" is not a git repository. Cannot use as reference.', $plugin);
-						return null;
+						throw new Exception(self::handle_create_new_error($repo_path, $reference, '"'.$reference.'" is not a git repository. Cannot use as reference.', $plugin));
 					} else if (strlen($reference)) {
 						$reference = realpath($reference);
 						$reference = "--reference $reference";
@@ -230,11 +228,11 @@ class GitRepo {
 								$this->run('init');
 							}
 						} else {
-							$this->handle_repo_path_error($repo_path, '"'.$repo_path.'" is not a git repository');
+							throw new Exception($this->handle_repo_path_error($repo_path, '"'.$repo_path.'" is not a git repository'));
 						}
 					}
 				} else {
-					$this->handle_repo_path_error($repo_path, '"'.$repo_path.'" is not a directory');
+					throw new Exception($this->handle_repo_path_error($repo_path, '"'.$repo_path.'" is not a directory'));
 				}
 			} else {
 				if ($create_new) {
@@ -243,10 +241,10 @@ class GitRepo {
 						$this->repo_path = $repo_path;
 						if ($_init) $this->run('init');
 					} else {
-						$this->handle_repo_path_error($repo_path, 'cannot create repository in non-existent directory');
+						throw new Exception($this->handle_repo_path_error($repo_path, 'cannot create repository in non-existent directory'));
 					}
 				} else {
-					$this->handle_repo_path_error($repo_path, '"'.$repo_path.'" does not exist');
+					throw new Exception($this->handle_repo_path_error($repo_path, '"'.$repo_path.'" does not exist'));
 				}
 			}
 		}
@@ -337,7 +335,7 @@ class GitRepo {
 			// Remove a probable password from the Git URL, if the URL is contained in the error message
 			$error_message = preg_replace($this::REGEX_GIT_URL_FILTER_PWD, $this::REGEX_GIT_URL_FILTER_PWD_REPLACE_PATTERN, $stderr);
 			//dbglog("GitBacked - error_message: [".$error_message."]");
-			$this->handle_command_error($this->repo_path, $cwd, $command, $status, $error_message);
+			throw new Exception($this->handle_command_error($this->repo_path, $cwd, $command, $status, $error_message));
 		} else {
 			$this->handle_command_success($this->repo_path, $cwd, $command);
 		}
@@ -359,18 +357,18 @@ class GitRepo {
 	}
 
 	/**
-	 * Handles error on crate_new
+	 * Handles error on create_new
 	 *
 	 * @access  protected
 	 * @param   string  repository path
 	 * @param   string  error message
-	 * @return  void
+	 * @return  string  error message
 	 */
 	protected static function handle_create_new_error($repo_path, $reference, $error_message, $plugin) {
 		if ($plugin instanceof \action_plugin_gitbacked_editcommit) {
 			$plugin->notify_create_new_error($repo_path, $reference, $error_message);
 		}
-		throw new Exception($error_message);
+		return $error_message;
 	}
 
 	/**
@@ -379,13 +377,13 @@ class GitRepo {
 	 * @access  protected
 	 * @param   string  repository path
 	 * @param   string  error message
-	 * @return  void
+	 * @return  string  error message
 	 */
 	protected function handle_repo_path_error($repo_path, $error_message) {
 		if ($this->plugin instanceof \action_plugin_gitbacked_editcommit) {
 			$this->plugin->notify_repo_path_error($repo_path, $error_message);
 		}
-		throw new Exception($error_message);
+		return $error_message;
 	}
 
 	/**
@@ -397,13 +395,13 @@ class GitRepo {
 	 * @param   string  command line
 	 * @param   int     exit code of command (status)
 	 * @param   string  error message
-	 * @return  void
+	 * @return  string  error message
 	 */
 	protected function handle_command_error($repo_path, $cwd, $command, $status, $error_message) {
 		if ($this->plugin instanceof \action_plugin_gitbacked_editcommit) {
 			$this->plugin->notify_command_error($repo_path, $cwd, $command, $status, $error_message);
 		}
-		throw new Exception($error_message);
+		return $error_message;
 	}
 
 	/**
