@@ -288,6 +288,17 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
 			dbglog("GitBacked - handle_code_or_config_on_start - config change['".$message."']");
 		}
 
+		// template design manager
+        if ($INPUT->str('page') === 'styling'
+			&& $INPUT->str('do') === 'admin'
+            && !empty($INPUT->extract('run')->str('run'))
+            && !empty($INPUT->arr('tpl'))
+        ) {
+        	//$this->logAdmin(['save template style']);
+			$message = $this->getAuthor().' changed template style';
+			dbglog("GitBacked - handle_code_or_config_on_start - template style change['".$message."']");
+		}
+
         // extension manager
         if ($INPUT->str('page') === 'extension') {
             if ($INPUT->post->has('fn')) {
