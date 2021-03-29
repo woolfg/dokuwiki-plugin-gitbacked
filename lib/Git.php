@@ -426,10 +426,15 @@ class GitRepo {
 	 *
 	 * @access public
 	 * @param bool  return string with <br />
+	 * @param string status command options
 	 * @return string
 	 */
-	public function status($html = false) {
-		$msg = $this->run("status");
+	public function status($html = false, $options = '') {
+		$cmd = 'status';
+		if (!empty($options)) {
+			$cmd .= ' '.$options;
+		}
+		$msg = $this->run($cmd);
 		if ($html == true) {
 			$msg = str_replace("\n", "<br />", $msg);
 		}
@@ -450,6 +455,16 @@ class GitRepo {
 			$files = '"'.implode('" "', $files).'"';
 		}
 		return $this->run("add $files -v");
+	}
+
+	/**
+	 * Runs a `git add -A` call
+	 *
+	 * @access  public
+	 * @return  string
+	 */
+	public function addAll() {
+		return $this->run("add -A -v");
 	}
 
 	/**
