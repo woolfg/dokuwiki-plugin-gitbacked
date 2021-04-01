@@ -165,6 +165,11 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
         return $GLOBALS['USERINFO']['mail'];
     }
 
+	private function pageID($nameSpace, $pageName) {
+		$id = empty($nameSpace) ? $pageName : $nameSpace.':'.$pageName;
+		return $id;
+	}
+	
     public function handle_periodic_pull(Doku_Event &$event, $param) {
         if ($this->getConf('periodicPull')) {
             $lastPullFile = $this->temp_dir.'/lastpull.txt';
@@ -190,7 +195,7 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
 
     public function handle_media_deletion(Doku_Event &$event, $param) {
         $mediaPath = $event->data['path'];
-        $mediaName = $event->data['name'];
+        $mediaName = $event->data['id'];
 
         $message = str_replace(
             array('%media%','%user%'),
@@ -208,8 +213,8 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
 
     public function handle_media_upload(Doku_Event &$event, $param) {
 
-        $mediaPath = $event->data[1];
-        $mediaName = $event->data[2];
+        $mediaPath = $event->data[1]; // $fn
+        $mediaName = $event->data[2]; // $id
 
         $message = str_replace(
             array('%media%','%user%'),
@@ -236,10 +241,11 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
         if (!$rev) {
 
             $pagePath = $event->data[0][0];
+			$nameSpace = $event->data[1];
             $pageName = $event->data[2];
             $pageContent = $event->data[0][1];
 
-            // get the summary directly from the form input
+			// get the summary directly from the form input
             // as the metadata hasn't updated yet
             $editSummary = $GLOBALS['INPUT']->str('summary');
 
@@ -260,7 +266,7 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
 
             $message = str_replace(
                 array('%page%','%summary%','%user%'),
-                array($pageName,$editSummary,$this->getAuthor()),
+                array($this->pageID($nameSpace,$pageName),$editSummary,$this->getAuthor()),
                 $msgTemplate
             );
 
