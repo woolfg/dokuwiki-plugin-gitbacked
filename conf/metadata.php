@@ -17,3 +17,5 @@ $meta['repoWorkDir'] = array('string');
 $meta['gitPath'] = array('string');
 $meta['addParams'] = array('string');
 $meta['ignorePaths'] = array('string');
+$meta['emailAddressOnError'] = array('string');
+$meta['notifyByMailOnSuccess'] = array('onoff');
