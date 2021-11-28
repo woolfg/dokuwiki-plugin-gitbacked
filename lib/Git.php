@@ -139,6 +139,9 @@ class GitRepo {
 	protected $bare = false;
 	protected $envopts = array();
 	protected ?\action_plugin_gitbacked_editcommit $plugin = null;
+	// @bugfix for PHP <= 7.3 compatibility: class property type declarations are supported by PHP >= 7.4 only
+	// protected ?\action_plugin_gitbacked_editcommit $plugin = null;
+	protected $plugin = null;
 
 	/**
 	 * Create a new git repository
