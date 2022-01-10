@@ -1,5 +1,13 @@
 # gitbacked Plugin for DokuWiki
 
+## :bangbang: Maintainers Wanted :bangbang:
+
+This project is looking for maintainers.
+
+If you are interesting in giving this project some :green_heart:, please drop me a line!
+
+## gitbacked Plugin for DokuWiki
+
 Store/Sync pages and media files in a git repository
 
 All documentation for this plugin can be found at
