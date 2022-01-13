@@ -82,7 +82,7 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
 
 				//add the changed file and set the commit message
 				$repo->add($filePath);
-				$repo->commit($message);
+				$repo->commit($message, true, $this->getAuthor(), $this->getAuthorMail());
 
 				//if the push after Commit option is set we push the active branch to origin
 				if ($this->getConf('pushAfterCommit')) {
