@@ -18,7 +18,7 @@ require_once dirname(__FILE__).'/../lib/Git.php';
 
 class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
 
-    function __construct() {
+	function __construct() {
         global $conf;
         $this->temp_dir = $conf['tmpdir'].'/gitbacked';
         io_mkdir_p($this->temp_dir);
@@ -30,14 +30,22 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
         $controller->register_hook('MEDIA_UPLOAD_FINISH', 'AFTER', $this, 'handle_media_upload');
         $controller->register_hook('MEDIA_DELETE_FILE', 'AFTER', $this, 'handle_media_deletion');
         $controller->register_hook('DOKUWIKI_DONE', 'AFTER', $this, 'handle_periodic_pull');
+		$controller->register_hook('DOKUWIKI_STARTED', 'AFTER', $this, 'handle_code_or_config_on_start');
+		$controller->register_hook('DOKUWIKI_DONE', 'AFTER', $this, 'handle_code_or_config_on_done', null, 10);
+		$controller->register_hook('AJAX_CALL_UNKNOWN', 'AFTER', $this, 'handle_code_or_config_on_ajax');
+
     }
 
-    private function initRepo() {
+    private function initRepo($repoPathConfigKey, $repoWorkDirConfigKey) {
         //get path to the repo root (by default DokuWiki's savedir)
+		$configuredRepoPath = trim($this->getConf($repoPathConfigKey));
+		if (empty($configuredRepoPath)) {
+			return null;
+		}
         if(defined('DOKU_FARM')) {
-            $repoPath = $this->getConf('repoPath');
+            $repoPath = $configuredRepoPath;
         } else {
-            $repoPath = DOKU_INC.$this->getConf('repoPath');
+            $repoPath = DOKU_INC.$configuredRepoPath;
         }
         //set the path to the git binary
         $gitPath = trim($this->getConf('gitPath'));
@@ -48,8 +56,13 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
         io_mkdir_p($repoPath);
         $repo = new GitRepo($repoPath, $this, true, true);
         //set git working directory (by default DokuWiki's savedir)
-        $repoWorkDir = DOKU_INC.$this->getConf('repoWorkDir');
-        Git::set_bin(Git::get_bin().' --work-tree '.escapeshellarg($repoWorkDir));
+		if (!empty($repoWorkDirConfigKey)) {
+			$configuredRepoWorkDir = trim($this->getConf($repoWorkDirConfigKey));
+			if (!empty($configuredRepoWorkDir)) {
+			$repoWorkDir = DOKU_INC.$configuredRepoWorkDir;
+			Git::set_bin(Git::get_bin().' --work-tree '.escapeshellarg($repoWorkDir));
+			}
+		}
 
         $params = str_replace(
             array('%mail%','%user%'),
@@ -75,11 +88,29 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
 		return $ignore;
 	}
 
-    private function commitFile($filePath,$message) {
+	private function pullRepo($repoPathConfigKey,$repoWorkDirConfigKey) {
+		try {
+			$repo = $this->initRepo($repoPathConfigKey,$repoWorkDirConfigKey);
+			if (is_null($repo)) {
+				return;
+			}
+			//execute the pull request
+			$repo->pull('origin',$repo->active_branch());
+		} catch (Exception $e) {
+			if (!$this->isNotifyByEmailOnGitCommandError()) {
+				throw new Exception('Git command failed to perform pull: '.$e->getMessage(), 2, $e);
+			}
+			return;
+		}
+	}
+
+    private function commitFile($repoPathConfigKey,$repoWorkDirConfigKey,$filePath,$message) {
 		if (!$this->isIgnored($filePath)) {
 			try {
-				$repo = $this->initRepo();
-
+				$repo = $this->initRepo($repoPathConfigKey,$repoWorkDirConfigKey);
+				if (is_null($repo)) {
+					return;
+				}
 				//add the changed file and set the commit message
 				$repo->add($filePath);
 				$repo->commit($message);
@@ -97,6 +128,35 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
 		}
     }
 
+    private function commitAll($repoPathConfigKey,$repoWorkDirConfigKey,$message) {
+		try {
+			$repo = $this->initRepo($repoPathConfigKey,$repoWorkDirConfigKey);
+			if (is_null($repo)) {
+				return;
+			}
+			$gitStatus = $repo->status(false, '-s');
+			dbglog("GitBacked - commitAll[".$repoPathConfigKey."] - status BEFORE: (".strlen($gitStatus).") [".$gitStatus."]");
+			if (empty($gitStatus)) {
+				return;
+			}	
+			$repo->addAll();
+			dbglog("GitBacked - commitAll[".$repoPathConfigKey."] - AFTER addAll()");
+			$repo->commit($message);
+			dbglog("GitBacked - commitAll[".$repoPathConfigKey."] - AFTER commit");
+			$gitStatus = $repo->status(false, '-s');
+			dbglog("GitBacked - commitAll[".$repoPathConfigKey."] - status AFTER: (".strlen($gitStatus).") [".$gitStatus."]");
+
+			//if the push after Commit option is set we push the active branch to origin
+			if ($this->getConf('pushAfterCommit')) {
+				$repo->push('origin',$repo->active_branch());
+			}
+		} catch (Exception $e) {
+			if (!$this->isNotifyByEmailOnGitCommandError()) {
+				throw new Exception('Git committing or pushing failed: '.$e->getMessage(), 1, $e);
+			}
+		}
+	}
+
     private function getAuthor() {
         return $GLOBALS['USERINFO']['name'];
     }
@@ -105,6 +165,11 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
         return $GLOBALS['USERINFO']['mail'];
     }
 
+	private function pageID($nameSpace, $pageName) {
+		$id = empty($nameSpace) ? $pageName : $nameSpace.':'.$pageName;
+		return $id;
+	}
+	
     public function handle_periodic_pull(Doku_Event &$event, $param) {
         if ($this->getConf('periodicPull')) {
             $lastPullFile = $this->temp_dir.'/lastpull.txt';
@@ -120,18 +185,8 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
 
             //if it is time to run a pull request
             if ($lastPull+$timeToWait < $now) {
-				try {
-                	$repo = $this->initRepo();
-
-                	//execute the pull request
-                	$repo->pull('origin',$repo->active_branch());
-				} catch (Exception $e) {
-					if (!$this->isNotifyByEmailOnGitCommandError()) {
-						throw new Exception('Git command failed to perform periodic pull: '.$e->getMessage(), 2, $e);
-					}
-					return;
-				}
-
+				$this->pullRepo('repoPath', 'repoWorkDir');
+				$this->pullRepo('repoPathMedia', 'repoWorkDirMedia');
                 //save the current time to the file to track the last pull execution
                 file_put_contents($lastPullFile,serialize(time()));
             }
@@ -140,22 +195,26 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
 
     public function handle_media_deletion(Doku_Event &$event, $param) {
         $mediaPath = $event->data['path'];
-        $mediaName = $event->data['name'];
+        $mediaName = $event->data['id'];
 
         $message = str_replace(
             array('%media%','%user%'),
             array($mediaName,$this->getAuthor()),
             $this->getConf('commitMediaMsgDel')
         );
+		
+		if (!empty($this->getConf('repoPathMedia'))) {
+	        $this->commitFile('repoPathMedia','repoWorkDirMedia',$mediaPath,$message);
+		} else {
+			$this->commitFile('repoPath','repoWorkDir',$mediaPath,$message);
+		}
 
-        $this->commitFile($mediaPath,$message);
-
-    }
+	}
 
     public function handle_media_upload(Doku_Event &$event, $param) {
 
-        $mediaPath = $event->data[1];
-        $mediaName = $event->data[2];
+        $mediaPath = $event->data[1]; // $fn
+        $mediaName = $event->data[2]; // $id
 
         $message = str_replace(
             array('%media%','%user%'),
@@ -163,7 +222,11 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
             $this->getConf('commitMediaMsg')
         );
 
-        $this->commitFile($mediaPath,$message);
+		if (!empty($this->getConf('repoPathMedia'))) {
+	        $this->commitFile('repoPathMedia','repoWorkDirMedia',$mediaPath,$message);
+		} else {
+			$this->commitFile('repoPath','repoWorkDir',$mediaPath,$message);
+		}
 
     }
 
@@ -178,10 +241,11 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
         if (!$rev) {
 
             $pagePath = $event->data[0][0];
+			$nameSpace = $event->data[1];
             $pageName = $event->data[2];
             $pageContent = $event->data[0][1];
 
-            // get the summary directly from the form input
+			// get the summary directly from the form input
             // as the metadata hasn't updated yet
             $editSummary = $GLOBALS['INPUT']->str('summary');
 
@@ -202,15 +266,150 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
 
             $message = str_replace(
                 array('%page%','%summary%','%user%'),
-                array($pageName,$editSummary,$this->getAuthor()),
+                array($this->pageID($nameSpace,$pageName),$editSummary,$this->getAuthor()),
                 $msgTemplate
             );
 
-            $this->commitFile($pagePath,$message);
+            $this->commitFile('repoPath','repoWorkDir',$pagePath,$message);
 
         }
     }
-	
+
+    public function handle_code_or_config_on_start(Doku_Event &$event, $param) {
+
+		global $INPUT;
+
+		$message = '';
+		$isPluginChanged = false;
+
+		dbglog("GitBacked - handle_code_or_config_on_start - event=['".$event."'], data=['".$event->data."'], page='".$INPUT->str('page')."', save=".$INPUT->bool('save').", arr('config')=[".$INPUT->arr('config')."]");
+		// configuration manager
+        if ($INPUT->str('page') === 'config'
+			&& $INPUT->str('do') === 'admin'
+            && $INPUT->bool('save') === true
+            && !empty($INPUT->arr('config'))
+        ) {
+        	//$this->logAdmin(['save config']);
+			$message = $this->getAuthor().' changed config';
+			dbglog("GitBacked - handle_code_or_config_on_start - config change['".$message."']");
+		}
+
+		// template design manager
+        if ($INPUT->str('page') === 'styling'
+			&& $INPUT->str('do') === 'admin'
+            && !empty($INPUT->extract('run')->str('run'))
+            && !empty($INPUT->arr('tpl'))
+        ) {
+        	//$this->logAdmin(['save template style']);
+			$message = $this->getAuthor().' changed template style';
+			dbglog("GitBacked - handle_code_or_config_on_start - template style change['".$message."']");
+		}
+
+        // extension manager
+        if ($INPUT->str('page') === 'extension') {
+            if ($INPUT->post->has('fn')) {
+				$aChangedExtensions = array();
+                $actions = $INPUT->post->arr('fn');
+                foreach ($actions as $action => $extensions) {
+                    foreach ($extensions as $extname => $label) {
+                        //$this->logAdmin([$action, $extname]);
+						$changedExtension = $action."['".$extname."']";
+						array_push($aChangedExtensions, $changedExtension);
+						dbglog("GitBacked - handle_code_or_config_on_start - action[extension] = ".$changedExtension);
+					}
+                }
+			    $isPluginChanged = true;
+				$message = $this->getAuthor().' changed plugins: '.implode (', ', $aChangedExtensions);
+				dbglog("GitBacked - handle_code_or_config_on_start - EXTENSION change['".$message."']");
+            } elseif ($INPUT->post->str('installurl')) {
+                //$this->logAdmin(['installurl', $INPUT->post->str('installurl')]);
+			    $isPluginChanged = true;
+ 				$message = $this->getAuthor().' installed plugin by URL: '.$INPUT->post->str('installurl');
+				dbglog("GitBacked - handle_code_or_config_on_start - PLUGIN_URL change['".$message."']");
+            } elseif (isset($_FILES['installfile'])) {
+				//$this->logAdmin(['installfile', $_FILES['installfile']['name']]);
+			    $isPluginChanged = true;
+	 			$message = $this->getAuthor().' installed plugin by file: '.$_FILES['installfile']['name'];
+				dbglog("GitBacked - handle_code_or_config_on_start - PLUGIN_FILE change['".$message."']");
+            }
+        }
+
+        // ACL manager
+        if ($INPUT->str('page') === 'acl' && $INPUT->has('cmd')) {
+            $cmd = $INPUT->extract('cmd')->str('cmd');
+            $del = $INPUT->arr('del');
+            if ($cmd === 'update' && !empty($del)) {
+                $cmd = 'delete';
+                $rule = $del;
+            } else {
+                $rule = [
+                    'ns' => $INPUT->str('ns'),
+                    'acl_t' => $INPUT->str('acl_t'),
+                    'acl_w' => $INPUT->str('acl_w'),
+                    'acl' => $INPUT->str('acl')
+                ];
+            }
+
+            //$this->logAdmin([$cmd, $rule]);
+ 			$message = $this->getAuthor().' changed ACLs';
+			dbglog("GitBacked - handle_code_or_config_on_start - ACL change['".$message."']");
+        }
+
+		if (!empty($message)) {
+			$confOrCodeChangeMessageFile = $this->temp_dir.'/confOrCodeChangeMessage.txt';
+			file_put_contents($confOrCodeChangeMessageFile,serialize($message));
+		}
+		if ($isPluginChanged == true) {
+			$isPluginChangedFile = $this->temp_dir.'/isPluginChanged.txt';
+			file_put_contents($isPluginChangedFile,serialize($isPluginChanged));
+		}
+
+	}
+
+    public function handle_code_or_config_on_done(Doku_Event &$event, $param) {
+		global $INPUT;
+
+		dbglog("GitBacked - handle_code_or_config_on_done - event=['".$event."'], data=['".$event->data."'], page='".$INPUT->str('page')."', save=".$INPUT->bool('save').", arr('config')=[".$INPUT->arr('config')."]");
+
+		$message = '';
+		$confOrCodeChangeMessageFile = $this->temp_dir.'/confOrCodeChangeMessage.txt';
+        if (is_file($confOrCodeChangeMessageFile)) {
+            $message = unserialize(file_get_contents($confOrCodeChangeMessageFile));
+		}
+		$isPluginChangedFile = $this->temp_dir.'/isPluginChanged.txt';
+		$isPluginChanged = is_file($isPluginChangedFile);
+		if ($isPluginChanged == true) {
+			dbglog("GitBacked - commitAll CODE['".$message."']");
+			$this->commitAll('repoPathCode',null,$message);
+			@unlink($isPluginChangedFile);
+		}
+		if (!empty($message)) {
+			dbglog("GitBacked - commitAll CONF['".$message."']");
+			$this->commitAll('repoPathConf',null,$message);
+			@unlink($confOrCodeChangeMessageFile);
+		}
+
+	}
+
+    /**
+     * Catch admin actions performed via Ajax
+     *
+     * @param Doku_Event $event
+     */
+    public function handle_code_or_config_on_ajax(Doku_Event &$event, $param) {
+        global $INPUT;
+
+		dbglog("GitBacked - handle_code_or_config_on_ajax - event=['".$event."'], data=['".$event->data."'], page='".$INPUT->str('page')."'");
+
+		// extension manager
+        if ($event->data === 'plugin_extension') {
+            //$this->logAdmin([$INPUT->str('act') . ' ' . $INPUT->str('ext')], 'extension');
+			$message = $this->getAuthor().' '.$INPUT->str('act').' plugin '.$INPUT->str('ext');
+			$this->commitAll('repoPathCode',null,$message);
+			$this->commitAll('repoPathConf',null,$message);
+        }
+    }
+
 	// ====== Error notification helpers ======
 	/**
 	 * Notifies error on create_new
@@ -228,7 +427,7 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
 			'GIT_ERROR_MESSAGE' => $error_message
 		);
 		return $this->notifyByMail('mail_create_new_error_subject', 'mail_create_new_error', $template_replacements);
-	}	
+	}
 
 	/**
 	 * Notifies error on setting repo path
@@ -300,7 +499,7 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
 	 */
 	public function notifyByMail($subject_id, $template_id, $template_replacements) {
 		$ret = false;
-		dbglog("GitBacked - notifyByMail: [subject_id=".$subject_id.", template_id=".$template_id.", template_replacements=".$template_replacements."]");
+		//dbglog("GitBacked - notifyByMail: [subject_id=".$subject_id.", template_id=".$template_id.", template_replacements=".$template_replacements."]");
 		if (!$this->isNotifyByEmailOnGitCommandError()) {
 			return $ret;
 		}	
@@ -311,16 +510,16 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
 
 		$mailer = new \Mailer();
 		$mailer->to($this->getEmailAddressOnErrorConfigured());
-		dbglog("GitBacked - lang check['".$subject_id."']: ".$this->getLang($subject_id));
-		dbglog("GitBacked - template text['".$template_id."']: ".$template_text);
-		dbglog("GitBacked - template html['".$template_id."']: ".$template_html);
+		//dbglog("GitBacked - lang check['".$subject_id."']: ".$this->getLang($subject_id));
+		//dbglog("GitBacked - template text['".$template_id."']: ".$template_text);
+		//dbglog("GitBacked - template html['".$template_id."']: ".$template_html);
 		$mailer->subject($this->getLang($subject_id));
 		$mailer->setBody($template_text, $template_replacements, null, $template_html);
 		$ret = $mailer->send();
-		
+
         return $ret;
 	}
-	
+
 	/**
 	 * Check, if eMail is to be sent on a Git command error.
 	 *
@@ -331,7 +530,7 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
 		$emailAddressOnError = $this->getEmailAddressOnErrorConfigured();
 		return !empty($emailAddressOnError);
 	}
-	
+
 	/**
 	 * Get the eMail address configured for notifications.
 	 *
