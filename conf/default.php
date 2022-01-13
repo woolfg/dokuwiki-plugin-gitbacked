@@ -5,6 +5,7 @@
  * @author Wolfgang Gassler <wolfgang@gassler.org>
  */
 
+$conf['initRepo'] = 1;
 $conf['pushAfterCommit'] = 0;
 $conf['periodicPull'] = 0;
 $conf['periodicMinutes'] = 60;

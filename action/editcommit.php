@@ -32,23 +32,36 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
         $controller->register_hook('DOKUWIKI_DONE', 'AFTER', $this, 'handle_periodic_pull');
     }
 
-    private function initRepo() {
-        //get path to the repo root (by default DokuWiki's savedir)
-        if(defined('DOKU_FARM')) {
-            $repoPath = $this->getConf('repoPath');
-        } else {
-            $repoPath = DOKU_INC.$this->getConf('repoPath');
-        }
+    private function initRepo($initRepo=True, $filePath="") {
+		if($initRepo) {
+			//get path to the repo root (by default DokuWiki's savedir)
+			if(defined('DOKU_FARM')) {
+				$repoPath = $this->getConf('repoPath');
+			} else {
+				$repoPath = DOKU_INC.$this->getConf('repoPath');
+			}
+		} else {
+			$repoPath = dirname($filePath);
+		}
         //set the path to the git binary
         $gitPath = trim($this->getConf('gitPath'));
         if ($gitPath !== '') {
             Git::set_bin($gitPath);
         }
-        //init the repo and create a new one if it is not present
-        io_mkdir_p($repoPath);
-        $repo = new GitRepo($repoPath, $this, true, true);
+		if ($initRepo) {
+			//init the repo and create a new one if it is not present
+			io_mkdir_p($repoPath);
+			$repo = new GitRepo($repoPath, $this, true, true);
+		} else {
+			new GitRepo($repoPath, $this, false, false);
+		}
         //set git working directory (by default DokuWiki's savedir)
-        $repoWorkDir = DOKU_INC.$this->getConf('repoWorkDir');
+		if ($initRepo) {
+        	$repoWorkDir = DOKU_INC.$this->getConf('repoWorkDir');
+		} else {
+			$repoWorkDir = $repoPath;
+		}
+
         Git::set_bin(Git::get_bin().' --work-tree '.escapeshellarg($repoWorkDir));
 
         $params = str_replace(
@@ -78,7 +91,12 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
     private function commitFile($filePath,$message) {
 		if (!$this->isIgnored($filePath)) {
 			try {
-				$repo = $this->initRepo();
+				$initRepo = $this->getConf('initRepo');
+				if ($initRepo) {
+					$repo = $this->initRepo();
+				} else {
+					$repo = $this->initRepo($initRepo, $filePath);
+				}
 
 				//add the changed file and set the commit message
 				$repo->add($filePath);
