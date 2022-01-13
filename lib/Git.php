@@ -212,8 +212,11 @@ class GitRepo {
 			if ($new_path = realpath($repo_path)) {
 				$repo_path = $new_path;
 				if (is_dir($repo_path)) {
+					if ($this->is_in_git_repo($repo_path) {
+						$this->repo_path = $repo_path;
+						$this->bare = false;
 					// Is this a work tree?
-					if (file_exists($repo_path."/.git") && is_dir($repo_path."/.git")) {
+					} else if (file_exists($repo_path."/.git") && is_dir($repo_path."/.git")) {
 						$this->repo_path = $repo_path;
 						$this->bare = false;
 					// Is this a bare repo?
@@ -284,6 +287,29 @@ class GitRepo {
 
 		$status = trim(proc_close($resource));
 		return ($status != 127);
+	}
+
+	/**
+	 * Tests if we are in a git repository
+	 *
+	 * @access  public
+	 * @return  bool
+	 */
+	public function is_in_git_repo($path) {
+		$descriptorspec = array(
+			1 => array('pipe', 'w'),
+			2 => array('pipe', 'w'),
+		);
+		$pipes = array();
+		$resource = proc_open(Git::get_bin() + ' rev-parse --is-inside-work-tree', $descriptorspec, $pipes, $path);
+		$stdout = stream_get_contents($pipes[1]);
+		$stderr = stream_get_contents($pipes[2]);
+		foreach ($pipes as $pipe) {
+			fclose($pipe);
+		}
+
+		$status = trim(proc_close($resource));
+		return ($status == 0);
 	}
 
 	/**
