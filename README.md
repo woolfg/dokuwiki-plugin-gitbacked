@@ -42,4 +42,4 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
-See the COPYING file in your DokuWiki folder for details
+See the [COPYING](https://github.com/splitbrain/dokuwiki/blob/master/COPYING) file in your DokuWiki folder for details
