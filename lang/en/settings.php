@@ -6,6 +6,7 @@
  * @author Wolfgang Gassler <wolfgang@gassler.org>
  */
 
+$lang['autoDetermineRepos'] = 'Determine existing git repo(s) from the path of the file to commit. If set, then the configs <code>repoPath</code> and <code>repoWorkDir</code> are ignored.';
 $lang['pushAfterCommit'] = 'Push active branch to remote origin after every commit';
 $lang['periodicPull'] = 'Pull the remote git repository every "periodicMinutes" triggered by a http page request';
 $lang['periodicMinutes'] = 'Timespan (in minutes) between periodic pull requests';

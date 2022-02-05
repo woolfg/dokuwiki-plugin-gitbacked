@@ -30,32 +30,33 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
         $controller->register_hook('DOKUWIKI_DONE', 'AFTER', $this, 'handle_periodic_pull');
     }
 
-    private function initRepo($initRepo=True, $filePath="") {
-		if($initRepo) {
-			$repoPath = GitBackedUtil::getEffectivePath($this->getConf('repoPath'));
-		} else {
+    private function initRepo($isAutoDetermineRepos=false, $filePath="") {
+		if($isAutoDetermineRepos) {
 			$repoPath = dirname($filePath);
+		} else {
+			//get path to the repo root (by default DokuWiki's savedir)
+			$repoPath = GitBackedUtil::getEffectivePath($this->getConf('repoPath'));
 		}
         //set the path to the git binary
         $gitPath = trim($this->getConf('gitPath'));
         if ($gitPath !== '') {
             Git::set_bin($gitPath);
         }
-		if ($initRepo) {
+		if ($isAutoDetermineRepos) {
+			$repo = new GitRepo($repoPath, $this, false, false);
+		} else {
 			//init the repo and create a new one if it is not present
 			io_mkdir_p($repoPath);
 			$repo = new GitRepo($repoPath, $this, true, true);
-		} else {
-			$repo = new GitRepo($repoPath, $this, false, false);
 		}
         //set git working directory (by default DokuWiki's savedir)
-		if ($initRepo) {
+		if ($isAutoDetermineRepos) {
+			$repoWorkDir = "";
+		} else {
             $repoWorkDir = $this->getConf('repoWorkDir');
             if (!empty($repoWorkDir)) {
                 $repoWorkDir = GitBackedUtil::getEffectivePath($repoWorkDir);
             }
-		} else {
-			$repoWorkDir = "";
 		}
 
         Git::set_bin(empty($repoWorkDir) ? Git::get_bin() : Git::get_bin().' --work-tree '.escapeshellarg($repoWorkDir));
@@ -87,11 +88,11 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
     private function commitFile($filePath,$message) {
 		if (!$this->isIgnored($filePath)) {
 			try {
-				$initRepo = $this->getConf('initRepo');
-				if ($initRepo) {
-					$repo = $this->initRepo();
+				$isAutoDetermineRepos = $this->getConf('autoDetermineRepos');
+				if ($isAutoDetermineRepos) {
+					$repo = $this->initRepo($isAutoDetermineRepos, $filePath);
 				} else {
-					$repo = $this->initRepo($initRepo, $filePath);
+					$repo = $this->initRepo();
 				}
 
 				//add the changed file and set the commit message

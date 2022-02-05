@@ -6,6 +6,7 @@
  * @author Markus Hoffrogge <mhoffrogge@gmail.com>
  */
 
+$lang['autoDetermineRepos'] = 'Erkennt existierende git repo(s) in dem Pfad der geänderten Datei. Wenn gesetzt, dann werden die Einstellungen <code>repoPath</code> und <code>repoWorkDir</code> ignoriert.';
 $lang['pushAfterCommit'] = 'Push des aktiven Branch zum remote origin nach jedem commit';
 $lang['periodicPull'] = 'Pull des remote git Repositories alle "periodicMinutes", getriggert von einem http Page Request';
 $lang['periodicMinutes'] = 'Zeitraum (in Minuten) zwischen den periodischen pull requests';
