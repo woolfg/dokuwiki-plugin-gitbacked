@@ -46,7 +46,7 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
 			io_mkdir_p($repoPath);
 			$repo = new GitRepo($repoPath, $this, true, true);
 		} else {
-			new GitRepo($repoPath, $this, false, false);
+			$repo = new GitRepo($repoPath, $this, false, false);
 		}
         //set git working directory (by default DokuWiki's savedir)
 		if ($initRepo) {
