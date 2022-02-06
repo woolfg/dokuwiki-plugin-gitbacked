@@ -15,7 +15,7 @@ $conf['commitMediaMsgDel']	= 'Wiki media %media% deleted by %user%';
 $conf['repoPath'] = $GLOBALS['conf']['savedir'];
 $conf['repoWorkDir'] = $GLOBALS['conf']['savedir'];
 $conf['gitPath'] = '';
-$conf['addParams'] = '';
+$conf['addParams'] = '-c user.name="%user%" -c user.email="<%mail%>"';
 $conf['ignorePaths'] = '';
 $conf['emailAddressOnError'] = '';
 $conf['notifyByMailOnSuccess'] = 0;
