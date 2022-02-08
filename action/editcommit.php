@@ -44,6 +44,7 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
         }
 		if ($isAutoDetermineRepos) {
 			$repo = new GitRepo($repoPath, $this, false, false);
+			$repoPath = $repo->get_repo_path();
 		} else {
 			//init the repo and create a new one if it is not present
 			io_mkdir_p($repoPath);
@@ -51,7 +52,7 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
 		}
         //set git working directory (by default DokuWiki's savedir)
 		if ($isAutoDetermineRepos) {
-			$repoWorkDir = "";
+			$repoWorkDir = '';
 		} else {
             $repoWorkDir = $this->getConf('repoWorkDir');
             if (!empty($repoWorkDir)) {
