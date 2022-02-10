@@ -30,15 +30,16 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
         $controller->register_hook('DOKUWIKI_DONE', 'AFTER', $this, 'handle_periodic_pull');
     }
 
-    private function initRepo($isAutoDetermineRepos=false, $filePath="") {
+    private function initRepo($fileOrDirPath="") {
         //set the path to the git binary
         $gitPath = trim($this->getConf('gitPath'));
         if ($gitPath !== '') {
             Git::set_bin($gitPath);
         }
 
+		$isAutoDetermineRepos = $this->getConf('autoDetermineRepos');
 		if ($isAutoDetermineRepos) {
-			$repoPath = dirname($filePath);
+			$repoPath = is_dir($fileOrDirPath) ? $fileOrDirPath : dirname($fileOrDirPath);
 			$repo = new GitRepo($repoPath, $this, false, false);
 			$repoPath = $repo->get_repo_path();
 			$repoWorkDir = '';
@@ -88,12 +89,7 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
     private function commitFile($filePath,$message) {
 		if (!$this->isIgnored($filePath)) {
 			try {
-				$isAutoDetermineRepos = $this->getConf('autoDetermineRepos');
-				if ($isAutoDetermineRepos) {
-					$repo = $this->initRepo($isAutoDetermineRepos, $filePath);
-				} else {
-					$repo = $this->initRepo();
-				}
+				$repo = $this->initRepo($filePath);
 
 				//add the changed file and set the commit message
 				$repo->add($filePath);
