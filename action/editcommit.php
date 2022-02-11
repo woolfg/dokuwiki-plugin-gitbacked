@@ -30,6 +30,15 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
         $controller->register_hook('DOKUWIKI_DONE', 'AFTER', $this, 'handle_periodic_pull');
     }
 
+    /**
+     * Create a GitRepo class instance according to this plugins config.
+     * If auto determination of git rpos is configured, this method will return null,
+     * if there is no git repo found.
+     *
+     * @access  private
+     * @param   string  path to the file or directory to be commited (required for auto determination only)
+     * @return  GitRepo instance or null if there is no repo related to fileOrDirPath
+     */
     private function initRepo($fileOrDirPath="") {
         //set the path to the git binary
         $gitPath = trim($this->getConf('gitPath'));
@@ -39,9 +48,15 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
 
 		$isAutoDetermineRepos = $this->getConf('autoDetermineRepos');
 		if ($isAutoDetermineRepos) {
+			if (empty($fileOrDirPath)) {
+				return null;
+			}
 			$repoPath = is_dir($fileOrDirPath) ? $fileOrDirPath : dirname($fileOrDirPath);
 			$repo = new GitRepo($repoPath, $this, false, false);
 			$repoPath = $repo->get_repo_path();
+			if (empty($repoPath)) {
+				return null;
+			}
 			$repoWorkDir = '';
 		} else {
 			//get path to the repo root (by default DokuWiki's savedir)
@@ -49,12 +64,8 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
 			//init the repo and create a new one if it is not present
 			io_mkdir_p($repoPath);
 			$repo = new GitRepo($repoPath, $this, true, true);
-		}
-        //set git working directory (by default DokuWiki's savedir)
-		if ($isAutoDetermineRepos) {
-			$repoWorkDir = '';
-		} else {
-            $repoWorkDir = $this->getConf('repoWorkDir');
+			//set git working directory (by default DokuWiki's savedir)
+            $repoWorkDir = trim($this->getConf('repoWorkDir'));
             if (!empty($repoWorkDir)) {
                 $repoWorkDir = GitBackedUtil::getEffectivePath($repoWorkDir);
             }
@@ -90,7 +101,9 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
 		if (!$this->isIgnored($filePath)) {
 			try {
 				$repo = $this->initRepo($filePath);
-
+				if (is_null($repo)) {
+					return;
+				}
 				//add the changed file and set the commit message
 				$repo->add($filePath);
 				$repo->commit($message);
@@ -131,17 +144,19 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
 
             //if it is time to run a pull request
             if ($lastPull+$timeToWait < $now) {
-				try {
-                	$repo = $this->initRepo();
-
-                	//execute the pull request
-                	$repo->pull('origin',$repo->active_branch());
-				} catch (Exception $e) {
-					if (!$this->isNotifyByEmailOnGitCommandError()) {
-						throw new Exception('Git command failed to perform periodic pull: '.$e->getMessage(), 2, $e);
-					}
-					return;
-				}
+                try {
+                    $repo = $this->initRepo();
+                    if (is_null($repo)) {
+                        return;
+                    }
+                    //execute the pull request
+                    $repo->pull('origin',$repo->active_branch());
+                } catch (Exception $e) {
+                    if (!$this->isNotifyByEmailOnGitCommandError()) {
+                        throw new Exception('Git command failed to perform periodic pull: '.$e->getMessage(), 2, $e);
+                    }
+                    return;
+                }
 
                 //save the current time to the file to track the last pull execution
                 file_put_contents($lastPullFile,serialize(time()));

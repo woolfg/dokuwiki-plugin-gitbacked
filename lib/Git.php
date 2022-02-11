@@ -233,6 +233,10 @@ class GitRepo {
 							if ($_init) {
 								$this->run('init');
 							}
+						} if (!$_init) {
+							// If we do not have to init the repo, we just reflect that there is no repo path yet.
+							// This may be the case for auto determining repos, if there is no repo related to the current resource going to be commited.
+							$this->repo_path = '';
 						} else {
 							throw new Exception($this->handle_repo_path_error($repo_path, '"'.$repo_path.'" is not a git repository'));
 						}
@@ -344,6 +348,10 @@ class GitRepo {
 	 * @return  string  or null in case of an error
 	 */
 	protected function run_command($command) {
+		//dbglog("Git->run_command: repo_path=[".$this->repo_path."])");
+		if (empty($this->repo_path)) {
+			throw new Exception($this->handle_repo_path_error($this->repo_path, "Failure on GitRepo->run_command(): Git command must not be run for an empty repo path"));
+		}
 		//dbglog("Git->run_command(command=[".$command."])");
 		$descriptorspec = array(
 			1 => array('pipe', 'w'),
@@ -368,9 +376,7 @@ class GitRepo {
 		} else {
 			$env = array_merge($_ENV, $this->envopts);
 		}
-		$cwd = $this->repo_path;
-		//dbglog("GitBacked - cwd: [".$cwd."]");
-		$resource = proc_open($command, $descriptorspec, $pipes, $cwd, $env);
+		$resource = proc_open($command, $descriptorspec, $pipes, $this->repo_path, $env);
 
 		$stdout = stream_get_contents($pipes[1]);
 		$stderr = stream_get_contents($pipes[2]);
