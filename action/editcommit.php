@@ -40,6 +40,8 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
      * @return  GitRepo instance or null if there is no repo related to fileOrDirPath
      */
     private function initRepo($fileOrDirPath="") {
+        global $conf;
+        
         //set the path to the git binary
         $gitPath = trim($this->getConf('gitPath'));
         if ($gitPath !== '') {
@@ -55,6 +57,11 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
 			$repo = new GitRepo($repoPath, $this, false, false);
 			$repoPath = $repo->get_repo_path();
 			if (empty($repoPath)) {
+				return null;
+			}
+			// Validate that the git repoPath found is within or below the DokuWiki 'savedir' configured:
+			if (strpos(realpath($repoPath), realpath($conf['savedir'])) === false) {
+				//dbglog("GitBacked - WARNING: repoPath=".$repoPath." is above the configured savedir=".realpath($conf['savedir'])." => this git repo will be ignored!");
 				return null;
 			}
 			$repoWorkDir = '';
