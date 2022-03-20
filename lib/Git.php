@@ -305,10 +305,10 @@ class GitRepo {
 	}
 
 	/**
-	 * Determine closest parent git repository for a given path
+	 * Determine closest parent git repository for a given path as absolute PHP realpath().
 	 *
 	 * @access  public
-	 * @return  string  the next parent git repo root dir or empty string, if no parent repo found
+	 * @return  string  the next parent git repo root dir as absolute PHP realpath() or empty string, if no parent repo found
 	 */
 	public function absolute_git_dir($path) {
 		$descriptorspec = array(
@@ -316,8 +316,10 @@ class GitRepo {
 			2 => array('pipe', 'w'),
 		);
 		$pipes = array();
-		$command = Git::get_bin()." rev-parse --absolute-git-dir";
-		//dbglog("Command: ".$command);
+		// Using --git-dir rather than --absolute-git-dir for a wider git versions compatibility
+		//$command = Git::get_bin()." rev-parse --absolute-git-dir";
+		$command = Git::get_bin()." rev-parse --git-dir";
+		//dbglog("GitBacked - Command: ".$command);
 		$resource = proc_open($command, $descriptorspec, $pipes, $path);
 		$stdout = stream_get_contents($pipes[1]);
 		$stderr = stream_get_contents($pipes[2]);
@@ -328,8 +330,14 @@ class GitRepo {
 		$status = trim(proc_close($resource));
 		if ($status == 0) {
 			$repo_git_dir = trim($stdout);
+			//dbglog("GitBacked - $command: '".$repo_git_dir."'");
 			if (!empty($repo_git_dir)) {
-				$repo_path = dirname($repo_git_dir);
+				if (strcmp($repo_git_dir, ".git") === 0) {
+					// convert to absolute path based on this command execution directory
+					$repo_git_dir = $path.'/'.$repo_git_dir;
+				}
+				$repo_path = dirname(realpath($repo_git_dir));
+				//dbglog('GitBacked - $repo_path: '.$repo_path);
 				if (file_exists($repo_path."/.git") && is_dir($repo_path."/.git")) {
 					return $repo_path;
 				}
