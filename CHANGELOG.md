@@ -59,12 +59,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - TBD
 -->
 
-## [Unreleased]
-
-### Changed
-- TBD
-
-
 ## [2022-01-20]
 
 ### Fixed
@@ -130,7 +124,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - This is just a dummy placeholder to make the parser of GHCICD/release-notes-from-changelog@v1 happy!
 -->
 
-[Unreleased]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2022-01-20..HEAD
 [2022-01-20]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2021-03-19..v2022-01-20
 [2021-03-19]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2016-08-14..v2021-03-19
 [2016-08-14]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2015-10-03..v2016-08-14
