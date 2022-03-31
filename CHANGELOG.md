@@ -65,6 +65,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - TBD
 
 
+## [2022-01-20]
+
+### Fixed
+- Fix for compatibility to PHP versions <7.4 - was introduced by previous release - fixes #69
+
+
 ## [2021-03-19]
 
 ### Added
@@ -124,7 +130,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - This is just a dummy placeholder to make the parser of GHCICD/release-notes-from-changelog@v1 happy!
 -->
 
-[Unreleased]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2021-03-19..HEAD
+[Unreleased]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2022-01-20..HEAD
+[2022-01-20]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2021-03-19..v2022-01-20
 [2021-03-19]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2016-08-14..v2021-03-19
 [2016-08-14]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2015-10-03..v2016-08-14
 [2015-10-03]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2012-10-31..v2015-10-03
