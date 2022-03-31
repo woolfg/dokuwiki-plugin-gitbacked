@@ -65,10 +65,36 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - TBD
 
 
+## [2015-10-03]
+
+### Added
+- Allow name and mail user variables in addParams.
+- Add an option for customizing git working tree
+- Added setting ignorePaths to ignore specified paths in add/commit-process
+
+### Changed
+- Use Markdown for the GitHub README.
+- Update plugin date and URL, added Carsten Teibes as author
+- Pull latest git php library (0.1.4)
+- Allow to set the path to the git binary - implements #8
+- Use relative path for Git.php and `$conf['tempdir']` for temp file.
+- Coding compliance change: move handle_periodic_pull down, together with other "handle"s.
+
+### Fixed
+- Fix passing additional arguments to git binary
+- Fix lang typos.
+- Coding compliance change, tabs to spaces, fix typos.
+- dokuwiki Farm fix
+
+
 ## [2012-10-31]
 
 ### Added
 - Initial release
+
+### Comments
+- The release name complies with the date property of plugin.info.txt
+- The recent commit within this release is [2dbc1a5](https://github.com/woolfg/dokuwiki-plugin-gitbacked/commit/2dbc1a5564516b801dbda239b68152edb5be0303) of 13-Nov-2012
 
 <!--
 ## []
@@ -77,5 +103,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - This is just a dummy placeholder to make the parser of GHCICD/release-notes-from-changelog@v1 happy!
 -->
 
-[Unreleased]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2012-10-31..HEAD
+[Unreleased]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2015-10-03..HEAD
+[2015-10-03]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2012-10-31..v2015-10-03
 [2012-10-31]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/releases/tag/v2012-10-31
