@@ -59,16 +59,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - TBD
 -->
 
-## [Unreleased]
-
-### Changed
-- TBD
-
-
 ## [2012-10-31]
 
 ### Added
 - Initial release
+
+### Comments
+- The release name complies with the date property of plugin.info.txt
+- The recent commit within this release is [2dbc1a5](https://github.com/woolfg/dokuwiki-plugin-gitbacked/commit/2dbc1a5564516b801dbda239b68152edb5be0303) of 13-Nov-2012
 
 <!--
 ## []
@@ -77,5 +75,4 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - This is just a dummy placeholder to make the parser of GHCICD/release-notes-from-changelog@v1 happy!
 -->
 
-[Unreleased]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2012-10-31..HEAD
 [2012-10-31]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/releases/tag/v2012-10-31
