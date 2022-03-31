@@ -65,6 +65,21 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - TBD
 
 
+## [2022-02-06]
+
+### Changed
+- Created LICENSE file and removed corresponding text from the README.md - implements #67
+- Use DokuWiki's user name & email address as commit author - implements #63, #66
+  - Updated default setting for `$conf['addParams']` to apply DokuWiki user name as commit author and DokuWiki user eMail as eMail.
+  - If DokuWiki user eMail is empty, then the eMail assigned to the commit will be empty as well.
+- Updated README.md:
+  - Added a link to the referred COPYING license file originally hosted on the DokuWiki master branch to simplify a probable lookup.
+  - Issues linked on startpage, motivate people to contribute
+
+### Fixed
+- Allow empty commits - fixes #39
+
+
 ## [2022-01-20]
 
 ### Fixed
@@ -130,7 +145,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - This is just a dummy placeholder to make the parser of GHCICD/release-notes-from-changelog@v1 happy!
 -->
 
-[Unreleased]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2022-01-20..HEAD
+[Unreleased]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2022-02-06..HEAD
+[2022-02-06]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2022-01-20..v2022-02-06
 [2022-01-20]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2021-03-19..v2022-01-20
 [2021-03-19]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2016-08-14..v2021-03-19
 [2016-08-14]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2015-10-03..v2016-08-14
