@@ -59,12 +59,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - TBD
 -->
 
-## [Unreleased]
-
-### Changed
-- TBD
-
-
 ## [2015-10-03]
 
 ### Added
@@ -103,6 +97,5 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - This is just a dummy placeholder to make the parser of GHCICD/release-notes-from-changelog@v1 happy!
 -->
 
-[Unreleased]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2015-10-03..HEAD
 [2015-10-03]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2012-10-31..v2015-10-03
 [2012-10-31]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/releases/tag/v2012-10-31
