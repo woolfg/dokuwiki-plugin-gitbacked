@@ -65,6 +65,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - TBD
 
 
+## [2016-08-14]
+
+### Changed
+- Updated last change date to current date - fix #38
+
+### Fixed
+- Adjusted method signatures to match parent in action/editcommit.php
+- Corrected method signature for php7-compatibility in action/editcommit.php
+
+
 ## [2015-10-03]
 
 ### Added
@@ -103,6 +113,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - This is just a dummy placeholder to make the parser of GHCICD/release-notes-from-changelog@v1 happy!
 -->
 
-[Unreleased]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2015-10-03..HEAD
+[Unreleased]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2016-08-14..HEAD
+[2016-08-14]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2015-10-03..v2016-08-14
 [2015-10-03]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2012-10-31..v2015-10-03
 [2012-10-31]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/releases/tag/v2012-10-31
