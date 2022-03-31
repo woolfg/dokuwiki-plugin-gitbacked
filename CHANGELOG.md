@@ -68,12 +68,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [2021-03-19]
 
 ### Added
-- Extended to send error messages to a configurable eMail address
+- Extended to send error messages to a configurable eMail address - implements #53
 - Added config `'emailAddressOnError'`
 - Added config `'notifyByMailOnSuccess'`
 - Added localizations for error messages
-- Added eMail templates for mail notifocations
+- Added eMail templates for mail notifications
 - German translations added
+
 
 ## [2016-08-14]
 
