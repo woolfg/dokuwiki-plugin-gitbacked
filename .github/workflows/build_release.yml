@@ -1,0 +1,205 @@
+# ------------------------------------------------------------------------------------------
+# This is a workflow to release this project as a zipped installable artifact.
+# Release version numbering and release notes generation is following standards defined by:
+#
+#   https://semver.org
+#   https://keepachangelog.com
+#   https://common-changelog.org
+#
+# Note: Since DokuWiki is using version numbering in format YYYY-MM-DD we use this numbering
+#       format rather than a dotted numbering scheme.
+#       The git tag names have to use a 'v' as prefix to the DokuWiki version number.
+#
+# ------------------------------------------------------------------------------------------
+name: Build a release
+
+on:
+  # Triggers the workflow on push of a tag filtering the tag to meet 
+  # semantic version numbering according to https://semver.org
+  # Here we use the DokuWiki conform version number pattern.
+  push:
+    tags:
+      ['v[0-9]+-[0-9]+-[0-9]+']
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  # Ensure that we run on tag references only
+  validate_github_reference:
+    name: Validate the tag reference
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    # Validate tag
+    if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+    steps:
+      - run: |
+          echo "The selected git ref=${{ github.ref }} is NOT a valid release tag. Please select a valid release TAG as reference."
+          exit 1
+
+  # Create a release
+  release:
+    name: Release
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    # Set job wide environment
+    env:
+      APP_NAME: dokuwiki-plugin-gitbacked
+      APP_INFO_FILE: plugin.info.txt
+      APP_INFO_FILE_VERSION_KEY: date
+      BUILD_DIR: build
+      ZIP_EXCLUSIONS: '*.git* .editorconfig /*.github/* /*build/* RELEASE_HEAD.md'
+    
+    steps:
+      # Log use case if triggered manually
+      - name: Log use case if triggered manually
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        run: |
+          echo "Workflow has been triggered manually"
+
+      # Log use case if triggered by push
+      - name: Log use case if triggered by push
+        if: ${{ github.event_name == 'push' }}
+        run: |
+          echo "Workflow has been triggered by push to ${{ github.ref }}"
+
+      # Check out this repo
+      - name: Checkout
+        uses: GHCICD/checkout@v3
+
+      # Set version tags as global environment properties
+      - name: Prepare Version Tags
+        run: |
+          #echo "MAJOR_VERSION=$(echo ${GITHUB_REF/refs\/tags\//} | awk -F'-' '{print $1}')" >> $GITHUB_ENV
+          #echo "MINOR_VERSION=$(echo ${GITHUB_REF/refs\/tags\//} | awk -F'-' '{print $1"-"$2}')" >> $GITHUB_ENV
+          #echo "FULL_VERSION=$(echo ${GITHUB_REF/refs\/tags\//} | awk -F'-' '{print $1"-"$2"-"$3}')" >> $GITHUB_ENV
+          echo "VERSION_TAG=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
+          echo "RELEASE_VERSION=${GITHUB_REF/refs\/tags\/v/}" >> $GITHUB_ENV
+          echo "APP_INFO_VERSION=$(sed -n -E 's/^${{ env.APP_INFO_FILE_VERSION_KEY }}[ \t]+([0-9-]+).*/\1/p' ${{ env.APP_INFO_FILE }})" >> $GITHUB_ENV
+
+      # Validate app info version and set release name
+      - name: Validate app info version and set release name
+        run: |
+          if [ "${{ env.RELEASE_VERSION }}" != "${{ env.APP_INFO_VERSION }}" ]; then
+            echo "Mismatch of release version=${{ env.RELEASE_VERSION }} and application info version=${{ env.APP_INFO_VERSION }}!" >&2
+            echo "Please review the value for key=${{ env.APP_INFO_FILE_VERSION_KEY }} in file ${{ env.APP_INFO_FILE }}."
+            exit 1
+          fi
+          echo "RELEASE_NAME=Release ${{ env.APP_INFO_VERSION }}" >> $GITHUB_ENV
+
+      - name: Validate CHANGELOG.md for this release version
+        # explanation of sed command:
+        # 1. select lines between SED_VERSION_BEGIN_PATTERN and SED_VERSION_END_PATTERN
+        # 2. invert this selection
+        # 3. delete it
+        # => only selection is remaining in stream
+        run: |
+          SED_VERSION_BEGIN_PATTERN="/^## \\[${{ env.RELEASE_VERSION }}\\]/"
+          SED_VERSION_END_PATTERN="/^## /"
+          echo "Pattern used for sed: ${SED_VERSION_BEGIN_PATTERN},${SED_VERSION_END_PATTERN} ! d"
+          #
+          # Extract the release notes for this RELEASE_VERSION including the line of the previous version:
+          #
+          RELEASE_NOTES_WITH_PREV_VERSION=$(sed -e "${SED_VERSION_BEGIN_PATTERN},${SED_VERSION_END_PATTERN} ! d" CHANGELOG.md)
+          echo ">>>>>> RELEASE_NOTES_WITH_PREV_VERSION - BEGIN >>>>>>"
+          echo "${RELEASE_NOTES_WITH_PREV_VERSION}"
+          echo "<<<<<< RELEASE_NOTES_WITH_PREV_VERSION - END <<<<<<"
+          #
+          # Format the release notes:
+          #
+          # 1. Remove last 2 lines: head -n 2
+          # 2. Remove any empty line from the end: sed -e :a -e '/^\n*$/{$d;N;ba' -e '}'
+          #    (s. http://sed.sourceforge.net/sed1line.txt for reference)
+          #
+          #RELEASE_VERSION_NOTES=$(echo "$RELEASE_NOTES_WITH_PREV_VERSION" | head -n -2 | sed -e :a -e '/^\n*$/{$d;N;ba' -e '}')
+          #echo "${RELEASE_VERSION_NOTES}" >> RELEASE.md
+          #printf "\n" >> RELEASE.md
+          #
+          # Extract previous release version:
+          #
+          # 1. Cut the last line only: tail -1
+          # 2. Get the version from the enclosing [] brackets: awk -F "[][]" '{ print $2 }'
+          #
+          PREV_RELEASE_VERSION=$(echo "$RELEASE_NOTES_WITH_PREV_VERSION" | tail -1 | awk -F "[][]" '{ print $2 }')
+          if [ -z "$PREV_RELEASE_VERSION" ]; then
+            EXPECTED_COMPARE_URL="${{ github.server_url }}/${{ github.repository }}/releases/tag/v${{ env.RELEASE_VERSION }}"
+          else
+            EXPECTED_COMPARE_URL="${{ github.server_url }}/${{ github.repository }}/compare/v${PREV_RELEASE_VERSION}..v${{ env.RELEASE_VERSION }}"
+          fi
+          # Validate CHANGELOG.md content
+          IS_OK="true"
+          if ! grep -q "^## \\[${{ env.RELEASE_VERSION }}\\]" CHANGELOG.md; then
+            IS_OK="false"
+            echo "ERROR: CHANGELOG.md does not contain an entry for this release version of format: ## [${{ env.RELEASE_VERSION }}]"
+          fi
+          if ! grep -q "^\\[${{ env.RELEASE_VERSION }}\\]: ${EXPECTED_COMPARE_URL}" CHANGELOG.md; then
+            IS_OK="false"
+            echo "ERROR: CHANGELOG.md does not contain a line with a compare link of format: [${{ env.RELEASE_VERSION }}]: ${EXPECTED_COMPARE_URL}"
+          fi
+          if [ "$IS_OK" != "true" ]; then
+            echo "Please review CHANGELOG.md and update it for the content expected."
+            exit 1
+          fi
+
+     # Prepare release notes and build directory
+      - name: Prepare release notes and build directory
+        run: |
+          mkdir ${{ env.BUILD_DIR }}
+          #cp ./README.md ${{ env.BUILD_DIR }}/README.md
+          touch ${{ env.BUILD_DIR }}/README.md
+          cp ./CHANGELOG.md ${{ env.BUILD_DIR }}/CHANGELOG.md
+          cp ./.github/workflows/resources/RELEASE_HEAD.md ${{ env.BUILD_DIR }}/RELEASE_HEAD.md
+
+      # Format the filename of this release
+      - name: Format release filename
+        id: format_release_filename
+        run: |
+          echo "::set-output name=FILE_NAME::${{ env.APP_NAME }}-${{ env.APP_INFO_VERSION }}.zip"
+
+      # Create archive file
+      - name: Build release archive
+        uses: GHCICD/zip-release@master
+        with:
+          type: 'zip'
+          filename: ${{ env.BUILD_DIR }}/${{ steps.format_release_filename.outputs.FILE_NAME }}
+          exclusions: ${{ env.ZIP_EXCLUSIONS }}
+
+      # Create release notes by release-notes-from-changelog
+      - name: Create release notes by GHCICD/release-notes-from-changelog@v1
+        uses: GHCICD/release-notes-from-changelog@v1
+        with:
+          version: ${{ env.RELEASE_VERSION }}
+          working-directory: ${{ env.BUILD_DIR }}
+ 
+      - name: Log RELEASE.md
+        run: |
+          echo ">>>>> build/RELEASE.md:"
+          cat ${{ env.BUILD_DIR }}/RELEASE.md
+          echo "<<<<<"
+#          echo ">>>>> build/CHANGELOG.md:"
+#          cat ${{ env.BUILD_DIR }}/CHANGELOG.md
+#          echo "<<<<<"
+
+      # Create release with info from CHANGELOG.md
+      - name: Create GitHub release by GHCICD/create-release@v1
+        id: create_release
+        uses: GHCICD/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          release_name: ${{ env.RELEASE_NAME }}
+          tag_name: ${{ env.VERSION_TAG }}
+          body_path: ${{ env.BUILD_DIR }}/RELEASE.md
+
+      - name: Upload release asset to GitHub by GHCICD/upload-release-asset@v1
+        uses: GHCICD/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ env.BUILD_DIR }}/${{ steps.format_release_filename.outputs.FILE_NAME }}
+          asset_name: ${{ steps.format_release_filename.outputs.FILE_NAME }}
+          asset_content_type: application/zip
+#
+# EOF
+#
