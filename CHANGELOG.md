@@ -35,7 +35,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   |
   |            +-URL to this repo               previous release version tag-+            +-current release version tag
   |            |                                                             |            |
- [yyyy-mm-dd]: https://github.com/mhoffrog/dokuwiki-plugin-gitbacked/compare/vYYYY-MM-DD..vYYYY-MM-DD
+ [yyyy-mm-dd]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/vYYYY-MM-DD..vYYYY-MM-DD
 -->
 <!--
 ## [Unreleased]
@@ -77,5 +77,5 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - This is just a dummy placeholder to make the parser of GHCICD/release-notes-from-changelog@v1 happy!
 -->
 
-[Unreleased]: https://github.com/mhoffrog/dokuwiki-plugin-gitbacked/compare/v2012-10-31..HEAD
-[2012-10-31]: https://github.com/mhoffrog/dokuwiki-plugin-gitbacked/releases/tag/v2012-10-31
+[Unreleased]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2012-10-31..HEAD
+[2012-10-31]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/releases/tag/v2012-10-31
