@@ -17,7 +17,7 @@ Store/Sync pages and media files in a git repository
 All documentation for this plugin can be found at
 http://www.dokuwiki.org/plugin:gitbacked
 
-This plugin is provided as released DokuWiki installable ZIP packages with detailed release notes
+This plugin is provided as released DokuWiki installable ZIP packages with detailed [release notes](https://github.com/woolfg/dokuwiki-plugin-gitbacked/blob/master/CHANGELOG.md)
 via this repos [Releases](https://github.com/woolfg/dokuwiki-plugin-gitbacked/releases).  
 Detailed technical information on how releases are built can be found at [HowTo manage releases](https://github.com/woolfg/dokuwiki-plugin-gitbacked/blob/master/.github/workflows/docs/HowTo_MANAGE_RELEASES.md).
 
