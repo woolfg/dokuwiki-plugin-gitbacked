@@ -18,7 +18,7 @@ All documentation for this plugin can be found at
 http://www.dokuwiki.org/plugin:gitbacked
 
 This plugin is provided as released DokuWiki installable ZIP packages with detailed release notes
-via this repos [Release](https://github.com/woolfg/dokuwiki-plugin-gitbacked/releases) page.  
+via this repos [Releases](https://github.com/woolfg/dokuwiki-plugin-gitbacked/releases).  
 Detailed technical information on how releases are built can be found at [HowTo manage releases](https://github.com/woolfg/dokuwiki-plugin-gitbacked/blob/master/.github/workflows/docs/HowTo_MANAGE_RELEASES.md).
 
 If you install this plugin manually, make sure that:
