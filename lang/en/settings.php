@@ -6,6 +6,7 @@
  * @author Wolfgang Gassler <wolfgang@gassler.org>
  */
 
+$lang['pingPushHost'] = 'Ping the push host, to make sure it is available before pushing. empty to disable';
 $lang['pushAfterCommit'] = 'Push active branch to remote origin after every commit';
 $lang['periodicPull'] = 'Pull the remote git repository every "periodicMinutes" triggered by a http page request';
 $lang['periodicMinutes'] = 'Timespan (in minutes) between periodic pull requests';

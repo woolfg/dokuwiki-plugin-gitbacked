@@ -83,11 +83,20 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
 				//add the changed file and set the commit message
 				$repo->add($filePath);
 				$repo->commit($message);
-
+				
+					if (!empty($this->getConf('pushAfterCommit'))) {
+						// ping first
+						$retval = -1;
+						system("ping  -c 1 -W 0.1 $this->getConf('pushAfterCommit')", $retval);
+						if ($retval != 0) { 
+							return;
+					}
+				}
 				//if the push after Commit option is set we push the active branch to origin
 				if ($this->getConf('pushAfterCommit')) {
 					$repo->push('origin',$repo->active_branch());
 				}
+				
 			} catch (Exception $e) {
 				if (!$this->isNotifyByEmailOnGitCommandError()) {
 					throw new Exception('Git committing or pushing failed: '.$e->getMessage(), 1, $e);

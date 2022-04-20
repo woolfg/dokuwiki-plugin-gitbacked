@@ -5,7 +5,7 @@
  *
  * @author Markus Hoffrogge <mhoffrogge@gmail.com>
  */
-
+$lang['pingPushHost'] = 'Ping the push host, to make sure it is available before pushing. empty to disable';
 $lang['pushAfterCommit'] = 'Push des aktiven Branch zum remote origin nach jedem commit';
 $lang['periodicPull'] = 'Pull des remote git Repositories alle "periodicMinutes", getriggert von einem http Page Request';
 $lang['periodicMinutes'] = 'Zeitraum (in Minuten) zwischen den periodischen pull requests';
