@@ -48,6 +48,14 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
             Git::set_bin($gitPath);
         }
 
+		$configuredRepoPath = trim($this->getConf('repoPath'));
+		$configuredRepoWorkDir = trim($this->getConf('repoWorkDir'));
+		if (!empty($configuredRepoPath)) {
+			$configuredRepoPath = GitBackedUtil::getEffectivePath($configuredRepoPath);
+		}
+		if (!empty($configuredRepoWorkDir)) {
+			$configuredRepoWorkDir = GitBackedUtil::getEffectivePath($configuredRepoWorkDir);
+		}
 		$isAutoDetermineRepos = $this->getConf('autoDetermineRepos');
 		if ($isAutoDetermineRepos) {
 			if (empty($fileOrDirPath)) {
@@ -65,17 +73,27 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
 				return null;
 			}
 			$repoWorkDir = '';
+			if (!empty($configuredRepoPath)) {
+				// For backward compatibility to legacy configuration:
+				// We will use the configured workDir, in case we have determined
+				// the repoPath configured.
+				if (realpath($configuredRepoPath) === realpath($repoPath)) {
+					$repoWorkDir = $configuredRepoWorkDir;
+					//dbglog("GitBacked - INFO: repoPath=".$repoPath." is the one explicitly configured => we use the configured workDir=[".$repoWorkDir."]");
+				}
+			}
+			//dbglog("GitBacked - AUTO_DETERMINE_USE_CASE: repoPath=".$repoPath);
+			//dbglog("GitBacked - AUTO_DETERMINE_USE_CASE: repoWorkDir=".$repoWorkDir);
 		} else {
-			//get path to the repo root (by default DokuWiki's savedir)
-			$repoPath = GitBackedUtil::getEffectivePath($this->getConf('repoPath'));
+			//get path to the repo root from configuration (by default DokuWiki's savedir)
+			$repoPath = $configuredRepoPath;
 			//init the repo and create a new one if it is not present
 			io_mkdir_p($repoPath);
 			$repo = new GitRepo($repoPath, $this, true, true);
-			//set git working directory (by default DokuWiki's savedir)
-            $repoWorkDir = trim($this->getConf('repoWorkDir'));
-            if (!empty($repoWorkDir)) {
-                $repoWorkDir = GitBackedUtil::getEffectivePath($repoWorkDir);
-            }
+			//set git working directory from configuration (by default DokuWiki's savedir)
+			$repoWorkDir = $configuredRepoWorkDir;
+			//dbglog("GitBacked - CONFIG_USE_CASE: configured repoPath=".$repoPath);
+			//dbglog("GitBacked - CONFIG_USE_CASE: configured repoWorkDir=".$repoWorkDir);
 		}
 
         Git::set_bin(empty($repoWorkDir) ? Git::get_bin() : Git::get_bin().' --work-tree '.escapeshellarg($repoWorkDir));
