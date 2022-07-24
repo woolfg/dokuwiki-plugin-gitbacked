@@ -30,6 +30,11 @@ If you install this plugin manually, make sure that:
 Please refer to http://www.dokuwiki.org/plugins for additional info
 on how to install plugins in DokuWiki.
 
+## Packages required:
+- git
+- openssh-client (for repos accessed via ssh)
+- iputils-ping (for the pingPushHost parameter)
+
 ## Maintainers
 
 - [@mhoffrog (Markus Hoffrogge)](https://github.com/mhoffrog)
