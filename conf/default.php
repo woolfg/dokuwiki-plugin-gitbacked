@@ -13,7 +13,7 @@ $conf['commitPageMsgDel']	= 'Wiki page %page% deleted with reason [%summary%] by
 $conf['commitMediaMsg']	= 'Wiki media %media% uploaded by %user%';
 $conf['commitMediaMsgDel']	= 'Wiki media %media% deleted by %user%';
 $conf['repoPath'] = $GLOBALS['conf']['savedir'];
-$conf['repoWorkDir'] = $GLOBALS['conf']['savedir'];
+$conf['repoWorkDir'] = '';
 $conf['gitPath'] = '';
 $conf['addParams'] = '-c user.name="%user%" -c user.email="<%mail%>"';
 $conf['ignorePaths'] = '';

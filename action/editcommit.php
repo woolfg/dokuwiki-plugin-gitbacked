@@ -15,6 +15,7 @@ if (!defined('DOKU_PLUGIN')) define('DOKU_PLUGIN',DOKU_INC.'lib/plugins/');
 
 require_once DOKU_PLUGIN.'action.php';
 require_once dirname(__FILE__).'/../lib/Git.php';
+require_once dirname(__FILE__).'/../lib/GitBackedUtil.php';
 
 class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
 
@@ -34,11 +35,7 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
 
     private function initRepo() {
         //get path to the repo root (by default DokuWiki's savedir)
-        $repoPath = $this->getConf('repoPath');
-        if (!defined('DOKU_FARM') && $repoPath[0] !== '/') {
-            $repoPath = DOKU_INC.$this->getConf('repoPath');
-        }
-        //set the path to the git binary
+        $repoPath = GitBackedUtil::getEffectivePath($this->getConf('repoPath'));
         $gitPath = trim($this->getConf('gitPath'));
         if ($gitPath !== '') {
             Git::set_bin($gitPath);
@@ -47,9 +44,11 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
         io_mkdir_p($repoPath);
         $repo = new GitRepo($repoPath, $this, true, true);
         //set git working directory (by default DokuWiki's savedir)
-        $repoWorkDir = DOKU_INC.$this->getConf('repoWorkDir');
-        Git::set_bin(Git::get_bin().' --work-tree '.escapeshellarg($repoWorkDir));
-
+        $repoWorkDir = $this->getConf('repoWorkDir');
+        if (!empty($repoWorkDir)) {
+            $repoWorkDir = GitBackedUtil::getEffectivePath($repoWorkDir);
+        }
+        Git::set_bin(empty($repoWorkDir) ? Git::get_bin() : Git::get_bin().' --work-tree '.escapeshellarg($repoWorkDir));
         $params = str_replace(
             array('%mail%','%user%'),
             array($this->getAuthorMail(),$this->getAuthor()),
