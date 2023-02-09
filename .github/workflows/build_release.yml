@@ -154,7 +154,7 @@ jobs:
       - name: Format release filename
         id: format_release_filename
         run: |
-          echo "::set-output name=FILE_NAME::${{ env.APP_NAME }}-${{ env.APP_INFO_VERSION }}.zip"
+          echo "FILE_NAME=${{ env.APP_NAME }}-${{ env.APP_INFO_VERSION }}.zip" >> $GITHUB_OUTPUT
 
       # Create archive file
       - name: Build release archive
