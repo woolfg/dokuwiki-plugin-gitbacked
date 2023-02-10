@@ -484,7 +484,12 @@ class GitRepo {
 	 */
 	public function commit($message = "", $commit_all = true) {
 		$flags = $commit_all ? '-av' : '-v';
-		return $this->run("commit --allow-empty ".$flags." -m ".escapeshellarg($message));
+		$msgfile = GitBackedUtil::createMessageFile($message);
+		try {
+		  return $this->run("commit --allow-empty ".$flags." --file=".$msgfile);
+		} finally {
+		  unlink($msgfile);
+		}
 	}
 
 	/**
@@ -679,7 +684,12 @@ class GitRepo {
 		if ($message === null) {
 			$message = $tag;
 		}
-		return $this->run("tag -a $tag -m " . escapeshellarg($message));
+		$msgfile = GitBackedUtil::createMessageFile($message);
+		try {
+		  return $this->run("tag -a $tag --file=".$msgfile);
+		} finally {
+		  unlink($msgfile);
+		}
 	}
 
 	/**
