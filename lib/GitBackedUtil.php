@@ -26,6 +26,13 @@ if (__FILE__ == $_SERVER['SCRIPT_FILENAME']) die('Bad load order');
 class GitBackedUtil {
 
     /**
+     * GitBacked temp directory
+     *
+     * @var string
+     */
+    protected static $temp_dir = '';
+
+    /**
      * Checks, if a given path name is an absolute path or not.
      * This function behaves like absolute path determination in dokuwiki init.php fullpath() method.
      * The relevant code has been copied from there.
@@ -74,6 +81,40 @@ class GitBackedUtil {
             $ret = DOKU_INC.$ret;
         }
         return $ret;
+    }
+
+    /**
+     * Returns the temp dir for GitBacked plugin.
+     * It ensures that the temp dir will be created , if not yet existing.
+     *
+     * @access  public
+     * @return  string          the gitbacked temp directory name
+     */
+    public static function getTempDir() {
+        if (empty(self::$temp_dir)) {
+            global $conf;
+            self::$temp_dir = $conf['tmpdir'].'/gitbacked';
+            io_mkdir_p(self::$temp_dir);
+        }
+        return self::$temp_dir;
+    }
+
+    /**
+     * Creates a temp file and writes the $message to it.
+     * It ensures that the temp dir will be created , if not yet existing.
+     *
+     * @access  public
+     * @param   string $message the text message
+     * @return  string          the temp filename created
+     */
+    public static function createMessageFile($message) {
+        $tmpfname = tempnam(self::getTempDir(), 'gitMessage_');
+        $handle = fopen($tmpfname, "w");
+        if (!empty($message)) {
+            fwrite($handle, $message);
+        }
+        fclose($handle);
+        return $tmpfname;
     }
 
 }

@@ -20,9 +20,7 @@ require_once dirname(__FILE__).'/../lib/GitBackedUtil.php';
 class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
 
     function __construct() {
-        global $conf;
-        $this->temp_dir = $conf['tmpdir'].'/gitbacked';
-        io_mkdir_p($this->temp_dir);
+        $this->temp_dir = GitBackedUtil::getTempDir();
     }
 
     public function register(Doku_Event_Handler $controller) {
