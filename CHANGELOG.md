@@ -62,7 +62,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 
 ### Changed
-- TBD
+- Allow absolute path in `'repoPath'` and/or `'repoWorkDir'` - implements #80
+- `'repoWorkDir'` is configured empty by default now
+- `--work-tree` option is ommited, if `'repoWorkDir'` is empty - addressing #79
+
+### Fixed
+- Cyrillic commit messages not being corrupted anymore - fixes #82
 
 
 ## [2022-02-06]
