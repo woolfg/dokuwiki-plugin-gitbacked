@@ -30,6 +30,10 @@ If you install this plugin manually, make sure that:
 Please refer to http://www.dokuwiki.org/plugins for additional info
 on how to install plugins in DokuWiki.
 
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md)
+
 ## Maintainers
 
 - [@mhoffrog (Markus Hoffrogge)](https://github.com/mhoffrog)
