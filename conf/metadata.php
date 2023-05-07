@@ -12,6 +12,7 @@ $meta['commitPageMsg'] = array('string');
 $meta['commitPageMsgDel'] = array('string');
 $meta['commitMediaMsg'] = array('string');
 $meta['commitMediaMsgDel'] = array('string');
+$meta['autoDetermineRepos'] = array('onoff');
 $meta['repoPath'] = array('string');
 $meta['repoWorkDir'] = array('string');
 $meta['gitPath'] = array('string');

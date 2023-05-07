@@ -212,8 +212,12 @@ class GitRepo {
 			if ($new_path = realpath($repo_path)) {
 				$repo_path = $new_path;
 				if (is_dir($repo_path)) {
+					$next_parent_repo_path = $this->absolute_git_dir($repo_path);
+					if (!empty($next_parent_repo_path)) {
+						$this->repo_path = $next_parent_repo_path;
+						$this->bare = false;
 					// Is this a work tree?
-					if (file_exists($repo_path."/.git") && is_dir($repo_path."/.git")) {
+					} else if (file_exists($repo_path."/.git") && is_dir($repo_path."/.git")) {
 						$this->repo_path = $repo_path;
 						$this->bare = false;
 					// Is this a bare repo?
@@ -229,6 +233,10 @@ class GitRepo {
 							if ($_init) {
 								$this->run('init');
 							}
+						} if (!$_init) {
+							// If we do not have to init the repo, we just reflect that there is no repo path yet.
+							// This may be the case for auto determining repos, if there is no repo related to the current resource going to be commited.
+							$this->repo_path = '';
 						} else {
 							throw new Exception($this->handle_repo_path_error($repo_path, '"'.$repo_path.'" is not a git repository'));
 						}
@@ -250,6 +258,16 @@ class GitRepo {
 				}
 			}
 		}
+	}
+
+	/**
+	 * Get the path to the repo directory
+	 * 
+	 * @access public
+	 * @return string
+	 */
+	public function get_repo_path() {
+		return $this->repo_path;
 	}
 
 	/**
@@ -287,6 +305,48 @@ class GitRepo {
 	}
 
 	/**
+	 * Determine closest parent git repository for a given path as absolute PHP realpath().
+	 *
+	 * @access  public
+	 * @return  string  the next parent git repo root dir as absolute PHP realpath() or empty string, if no parent repo found
+	 */
+	public function absolute_git_dir($path) {
+		$descriptorspec = array(
+			1 => array('pipe', 'w'),
+			2 => array('pipe', 'w'),
+		);
+		$pipes = array();
+		// Using --git-dir rather than --absolute-git-dir for a wider git versions compatibility
+		//$command = Git::get_bin()." rev-parse --absolute-git-dir";
+		$command = Git::get_bin()." rev-parse --git-dir";
+		//dbglog("GitBacked - Command: ".$command);
+		$resource = proc_open($command, $descriptorspec, $pipes, $path);
+		$stdout = stream_get_contents($pipes[1]);
+		$stderr = stream_get_contents($pipes[2]);
+		foreach ($pipes as $pipe) {
+			fclose($pipe);
+		}
+
+		$status = trim(proc_close($resource));
+		if ($status == 0) {
+			$repo_git_dir = trim($stdout);
+			//dbglog("GitBacked - $command: '".$repo_git_dir."'");
+			if (!empty($repo_git_dir)) {
+				if (strcmp($repo_git_dir, ".git") === 0) {
+					// convert to absolute path based on this command execution directory
+					$repo_git_dir = $path.'/'.$repo_git_dir;
+				}
+				$repo_path = dirname(realpath($repo_git_dir));
+				//dbglog('GitBacked - $repo_path: '.$repo_path);
+				if (file_exists($repo_path."/.git") && is_dir($repo_path."/.git")) {
+					return $repo_path;
+				}
+			}
+		}
+		return '';
+	}
+
+	/**
 	 * Run a command in the git repository
 	 *
 	 * Accepts a shell command to run
@@ -296,6 +356,10 @@ class GitRepo {
 	 * @return  string  or null in case of an error
 	 */
 	protected function run_command($command) {
+		//dbglog("Git->run_command: repo_path=[".$this->repo_path."])");
+		if (empty($this->repo_path)) {
+			throw new Exception($this->handle_repo_path_error($this->repo_path, "Failure on GitRepo->run_command(): Git command must not be run for an empty repo path"));
+		}
 		//dbglog("Git->run_command(command=[".$command."])");
 		$descriptorspec = array(
 			1 => array('pipe', 'w'),
@@ -320,9 +384,7 @@ class GitRepo {
 		} else {
 			$env = array_merge($_ENV, $this->envopts);
 		}
-		$cwd = $this->repo_path;
-		//dbglog("GitBacked - cwd: [".$cwd."]");
-		$resource = proc_open($command, $descriptorspec, $pipes, $cwd, $env);
+		$resource = proc_open($command, $descriptorspec, $pipes, $this->repo_path, $env);
 
 		$stdout = stream_get_contents($pipes[1]);
 		$stderr = stream_get_contents($pipes[2]);
