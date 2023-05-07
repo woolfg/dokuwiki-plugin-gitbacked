@@ -13,7 +13,6 @@ if (!defined('DOKU_LF')) define('DOKU_LF', "\n");
 if (!defined('DOKU_TAB')) define('DOKU_TAB', "\t");
 if (!defined('DOKU_PLUGIN')) define('DOKU_PLUGIN',DOKU_INC.'lib/plugins/');
 
-require_once DOKU_PLUGIN.'action.php';
 require_once dirname(__FILE__).'/../lib/Git.php';
 require_once dirname(__FILE__).'/../lib/GitBackedUtil.php';
 
@@ -296,7 +295,7 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
 	 */
 	public function notifyByMail($subject_id, $template_id, $template_replacements) {
 		$ret = false;
-		dbglog("GitBacked - notifyByMail: [subject_id=".$subject_id.", template_id=".$template_id.", template_replacements=".$template_replacements."]");
+		//dbglog("GitBacked - notifyByMail: [subject_id=".$subject_id.", template_id=".$template_id.", template_replacements=".$template_replacements."]");
 		if (!$this->isNotifyByEmailOnGitCommandError()) {
 			return $ret;
 		}	
@@ -307,9 +306,9 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
 
 		$mailer = new \Mailer();
 		$mailer->to($this->getEmailAddressOnErrorConfigured());
-		dbglog("GitBacked - lang check['".$subject_id."']: ".$this->getLang($subject_id));
-		dbglog("GitBacked - template text['".$template_id."']: ".$template_text);
-		dbglog("GitBacked - template html['".$template_id."']: ".$template_html);
+		//dbglog("GitBacked - lang check['".$subject_id."']: ".$this->getLang($subject_id));
+		//dbglog("GitBacked - template text['".$template_id."']: ".$template_text);
+		//dbglog("GitBacked - template html['".$template_id."']: ".$template_html);
 		$mailer->subject($this->getLang($subject_id));
 		$mailer->setBody($template_text, $template_replacements, null, $template_html);
 		$ret = $mailer->send();
