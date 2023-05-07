@@ -65,6 +65,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - TBD
 
 
+## [2023-05-07]
+
+### Fixed
+- Deprecation warnings raised on `action/editcommit.php` - fixes [#86]
+
+
 ## [2023-03-07]
 
 ### Changed
@@ -156,7 +162,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - This is just a dummy placeholder to make the parser of GHCICD/release-notes-from-changelog@v1 happy!
 -->
 
-[Unreleased]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2023-03-07..HEAD
+[Unreleased]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2023-05-07..HEAD
+[2023-05-07]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2023-03-07..v2023-05-07
 [2023-03-07]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2022-02-06..v2023-03-07
 [2022-02-06]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2022-01-20..v2022-02-06
 [2022-01-20]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2021-03-19..v2022-01-20
@@ -164,6 +171,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 [2016-08-14]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2015-10-03..v2016-08-14
 [2015-10-03]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2012-10-31..v2015-10-03
 [2012-10-31]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/releases/tag/v2012-10-31
+[#86]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/issues/86
 [#82]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/issues/82
 [#80]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/issues/80
 [#79]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/issues/79
