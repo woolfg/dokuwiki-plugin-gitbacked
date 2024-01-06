@@ -302,27 +302,9 @@ class GitRepo {
 			2 => array('pipe', 'w'),
 		);
 		$pipes = array();
-		/* Depending on the value of variables_order, $_ENV may be empty.
-		 * In that case, we have to explicitly set the new variables with
-		 * putenv, and call proc_open with env=null to inherit the reset
-		 * of the system.
-		 *
-		 * This is kind of crappy because we cannot easily restore just those
-		 * variables afterwards.
-		 *
-		 * If $_ENV is not empty, then we can just copy it and be done with it.
-		 */
-		if(count($_ENV) === 0) {
-			$env = NULL;
-			foreach($this->envopts as $k => $v) {
-				putenv(sprintf("%s=%s",$k,$v));
-			}
-		} else {
-			$env = array_merge($_ENV, $this->envopts);
-		}
 		$cwd = $this->repo_path;
 		//dbglog("GitBacked - cwd: [".$cwd."]");
-		$resource = proc_open($command, $descriptorspec, $pipes, $cwd, $env);
+		$resource = proc_open($command, $descriptorspec, $pipes, $cwd, $this->envopts);
 
 		$stdout = stream_get_contents($pipes[1]);
 		$stderr = stream_get_contents($pipes[2]);
