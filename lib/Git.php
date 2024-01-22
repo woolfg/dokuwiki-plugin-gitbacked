@@ -304,7 +304,18 @@ class GitRepo {
 		$pipes = array();
 		$cwd = $this->repo_path;
 		//dbglog("GitBacked - cwd: [".$cwd."]");
-		$resource = proc_open($command, $descriptorspec, $pipes, $cwd, $this->envopts);
+		/* Provide any $this->envopts via putenv
+		 * and call proc_open with env=null to inherit the rest
+		 * of env variables from the original process of the system.
+		 * Note: Variables set by putenv live for a
+		 * single PHP request run only. These variables
+		 * are visible "locally". They are NOT listed by getenv(),
+		 * but they are visible to the process forked by proc_open().
+		 */
+		foreach($this->envopts as $k => $v) {
+			putenv(sprintf("%s=%s",$k,$v));
+		}
+		$resource = proc_open($command, $descriptorspec, $pipes, $cwd, null);
 
 		$stdout = stream_get_contents($pipes[1]);
 		$stderr = stream_get_contents($pipes[2]);
