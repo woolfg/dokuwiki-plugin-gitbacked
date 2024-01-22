@@ -62,7 +62,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 
 ### Changed
-- TBD
+- Avoid using $_ENV in `lib/Git.php#run_command` - PR [#91]
+  - ensuring more controlled and secure handling of environment variables
+  - fixes probable warning 'Array to string conversion'
 
 
 ## [2023-05-07]
@@ -171,6 +173,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 [2016-08-14]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2015-10-03..v2016-08-14
 [2015-10-03]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2012-10-31..v2015-10-03
 [2012-10-31]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/releases/tag/v2012-10-31
+[#91]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/pull/91
 [#86]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/issues/86
 [#82]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/issues/82
 [#80]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/issues/80
