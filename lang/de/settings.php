@@ -8,6 +8,7 @@
 
 $lang['pushAfterCommit'] = 'Push des aktiven Branch zum remote origin nach jedem commit';
 $lang['periodicPull'] = 'Pull des remote git Repositories alle "periodicMinutes", getriggert von einem http Page Request';
+$lang['updateIndexOnPull'] = 'Index von Seiten aktualisieren, die durch einen Pull geändert wurden';
 $lang['periodicMinutes'] = 'Zeitraum (in Minuten) zwischen den periodischen pull requests';
 $lang['commitPageMsg']	= 'Commit Kommentar für Seitenänderungen (%user%,%summary%,%page% werden durch die tatsächlichen Werte ersetzt)';
 $lang['commitPageMsgDel']	= 'Commit Kommentar für gelöschte Seiten (%user%,%summary%,%page% werden durch die tatsächlichen Werte ersetzt)';
