@@ -100,8 +100,36 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
         return $GLOBALS['USERINFO']['mail'];
     }
 
+	private function computeLocalPath() {
+		global $conf;
+		$repoPath = str_replace('\\', '/', realpath(GitBackedUtil::getEffectivePath($this->getConf('repoPath'))));
+		$datadir = $conf['datadir']; // already normalized
+		if(!(substr($datadir, 0, strlen($repoPath)) === $repoPath))
+		{
+			throw new Exception('Datadir not inside repoPath ??');
+		}
+		return substr($datadir, strlen($repoPath)+1);
+	}
+	
+	private function updatePage($page){
+		
+		if (is_callable('dokuwiki\Search\Indexer::getInstance')) {
+			$Indexer = Indexer::getInstance();
+			$success = $Indexer->addPage($page, false, false);
+		} elseif (class_exists('Doku_Indexer')) {
+			$success = idx_addPage($page, false, false);
+		} else {
+		   // Failed to index the page. Your DokuWiki is older than release 2011-05-25 "Rincewind"
+		   $success = false;
+		}
+		
+		echo "Update $page: $success <br/>";
+
+	}
+	
     public function handle_periodic_pull(Doku_Event &$event, $param) {
         if ($this->getConf('periodicPull')) {
+			$enableIndexUpdate = $this->getConf('updateIndexOnPull');
             $lastPullFile = $this->temp_dir.'/lastpull.txt';
             //check if the lastPullFile exists
             if (is_file($lastPullFile)) {
@@ -113,13 +141,55 @@ class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
             $timeToWait = $this->getConf('periodicMinutes')*60;
             $now = time();
 
+
             //if it is time to run a pull request
             if ($lastPull+$timeToWait < $now) {
 				try {
+				
                 	$repo = $this->initRepo();
+					if($enableIndexUpdate)
+					{
+						$localPath = $this -> computeLocalPath();
+
+						// store current revision id
+						$revBefore = $repo->run('rev-parse HEAD');
+					}
 
                 	//execute the pull request
                 	$repo->pull('origin',$repo->active_branch());
+					
+					if($enableIndexUpdate)
+					{
+						// store new revision id
+						$revAfter = $repo->run('rev-parse HEAD');
+						
+						if(strcmp($revBefore, $revAfter) != 0)
+						{
+							// if there were some changes, get the list of all changed files
+							$changedFilesPage = $repo->run('diff --name-only '.$revBefore.' '.$revAfter);
+							$changedFiles = preg_split("/\r\n|\n|\r/", $changedFilesPage);
+							
+							foreach ($changedFiles as $cf) 
+							{
+								// check if the file is inside localPath, that is, it's a page
+								if(substr($cf, 0, strlen($localPath)) === $localPath)
+								{
+									// convert from relative filename to page name
+									// for example:	local/path/dir/subdir/test.txt -> dir:subdir:test
+									$page =  str_replace('/', ':',substr($cf, strlen($localPath)+1, -4)); // -4 removes .txt
+									
+									// update the page
+									$this -> updatePage($page);
+								}
+								else
+								{
+									echo "Page NOT to update: $cf <br/>";
+								}
+							}
+							
+						}
+					}
+					
 				} catch (Exception $e) {
 					if (!$this->isNotifyByEmailOnGitCommandError()) {
 						throw new Exception('Git command failed to perform periodic pull: '.$e->getMessage(), 2, $e);
