@@ -1,7 +1,7 @@
 base   gitbacked
 author Wolfgang Gassler (@woolfg), Carsten Teibes (@carstene1ns), Markus Hoffrogge (@mhoffrog)
 email  wolfgang@gassler.org
-date   2023-05-07
+date   2025-02-26
 name   gitbacked plugin
 desc   Pages and Media are stored in Git
 url    https://github.com/woolfg/dokuwiki-plugin-gitbacked

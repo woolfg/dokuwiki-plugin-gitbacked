@@ -62,6 +62,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- TBD
+
+
+## [2025-02-26]
+
+### Added
+- Add config `'updateIndexOnPull'` - PR [#93], [#94]
+
+### Changed
 - Avoid using $_ENV in `lib/Git.php#run_command` - PR [#91]
   - ensuring more controlled and secure handling of environment variables
   - fixes probable warning 'Array to string conversion'
@@ -164,7 +173,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - This is just a dummy placeholder to make the parser of GHCICD/release-notes-from-changelog@v1 happy!
 -->
 
-[Unreleased]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2023-05-07..HEAD
+[Unreleased]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2025-02-26..HEAD
+[2025-02-26]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2023-05-07..v2025-02-26
 [2023-05-07]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2023-03-07..v2023-05-07
 [2023-03-07]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2022-02-06..v2023-03-07
 [2022-02-06]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2022-01-20..v2022-02-06
@@ -173,6 +183,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 [2016-08-14]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2015-10-03..v2016-08-14
 [2015-10-03]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2012-10-31..v2015-10-03
 [2012-10-31]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/releases/tag/v2012-10-31
+[#94]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/pull/94
+[#93]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/pull/93
 [#91]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/pull/91
 [#86]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/issues/86
 [#82]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/issues/82
