@@ -1,0 +1,41 @@
+{
+  "editor.formatOnPaste": true,
+  "git.autofetch": true,
+  "[php]": {
+    "editor.detectIndentation": false,
+    "editor.defaultFormatter": "bmewburn.vscode-intelephense-client",
+    "editor.formatOnSave": true,
+    "editor.insertSpaces": true,
+    "editor.tabSize": 4,
+    //"prettier.tabWidth": 4,
+    //"prettier.useTabs": false
+    "editor.wordWrap": "wordWrapColumn",
+    "editor.wordWrapColumn": 120,
+    "editor.rulers": [120]
+  },
+  "[markdown]": {
+    "editor.wordWrap": "on"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[html]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[javascript]": {
+    "editor.detectIndentation": false,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    //"editor.insertSpaces": true,
+    //"editor.tabSize": 4,
+    //"prettier.tabWidth": 4,
+    //"prettier.useTabs": false
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    //"prettier.tabWidth": 4,
+    //"prettier.useTabs": true
+  },
+}

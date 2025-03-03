@@ -1,5 +1,7 @@
 <?php
 
+namespace woolfg\dokuwiki\plugin\gitbacked;
+
 /*
  * Git.php
  *
@@ -12,6 +14,7 @@
  * @repo       http://github.com/kbjr/Git.php
  */
 
+// phpcs:disable PSR1.Files.SideEffects.FoundWithSymbols
 if (__FILE__ == $_SERVER['SCRIPT_FILENAME']) die('Bad load order');
 
 // ------------------------------------------------------------------------
@@ -24,97 +27,107 @@ if (__FILE__ == $_SERVER['SCRIPT_FILENAME']) die('Bad load order');
  *
  * @class  Git
  */
-class Git {
+class Git
+{
+    /**
+     * Git executable location
+     *
+     * @var string
+     */
+    protected static $bin = '/usr/bin/git';
 
-	/**
-	 * Git executable location
-	 *
-	 * @var string
-	 */
-	protected static $bin = '/usr/bin/git';
+    /**
+     * Sets git executable path
+     *
+     * @param string $path executable location
+     */
+    public static function setBin($path)
+    {
+        self::$bin = $path;
+    }
 
-	/**
-	 * Sets git executable path
-	 *
-	 * @param string $path executable location
-	 */
-	public static function set_bin($path) {
-		self::$bin = $path;
-	}
+    /**
+     * Gets git executable path
+     */
+    public static function getBin()
+    {
+        return self::$bin;
+    }
 
-	/**
-	 * Gets git executable path
-	 */
-	public static function get_bin() {
-		return self::$bin;
-	}
+    /**
+     * Sets up library for use in a default Windows environment
+     */
+    public static function windowsMode()
+    {
+        self::setBin('git');
+    }
 
-	/**
-	 * Sets up library for use in a default Windows environment
-	 */
-	public static function windows_mode() {
-		self::set_bin('git');
-	}
+    /**
+     * Create a new git repository
+     *
+     * Accepts a creation path, and, optionally, a source path
+     *
+     * @access  public
+     * @param   string  repository path
+     * @param   string  directory to source
+     * @param   \action_plugin_gitbacked_editcommit plugin
+     * @return  GitRepo
+     */
+    public static function &create($repo_path, $source = null, \action_plugin_gitbacked_editcommit $plugin = null)
+    {
+        return GitRepo::createNew($repo_path, $source, $plugin);
+    }
 
-	/**
-	 * Create a new git repository
-	 *
-	 * Accepts a creation path, and, optionally, a source path
-	 *
-	 * @access  public
-	 * @param   string  repository path
-	 * @param   string  directory to source
-	 * @param   \action_plugin_gitbacked_editcommit plugin
-	 * @return  GitRepo
-	 */
-	public static function &create($repo_path, $source = null, \action_plugin_gitbacked_editcommit $plugin = null) {
-		return GitRepo::create_new($repo_path, $source, $plugin);
-	}
+    /**
+     * Open an existing git repository
+     *
+     * Accepts a repository path
+     *
+     * @access  public
+     * @param   string  repository path
+     * @param   \action_plugin_gitbacked_editcommit plugin
+     * @return  GitRepo
+     */
+    public static function open($repo_path, \action_plugin_gitbacked_editcommit $plugin = null)
+    {
+        return new GitRepo($repo_path, $plugin);
+    }
 
-	/**
-	 * Open an existing git repository
-	 *
-	 * Accepts a repository path
-	 *
-	 * @access  public
-	 * @param   string  repository path
-	 * @param   \action_plugin_gitbacked_editcommit plugin
-	 * @return  GitRepo
-	 */
-	public static function open($repo_path, \action_plugin_gitbacked_editcommit $plugin = null) {
-		return new GitRepo($repo_path, $plugin);
-	}
+    /**
+     * Clones a remote repo into a directory and then returns a GitRepo object
+     * for the newly created local repo
+     *
+     * Accepts a creation path and a remote to clone from
+     *
+     * @access  public
+     * @param   string  repository path
+     * @param   string  remote source
+     * @param   string  reference path
+     * @param   \action_plugin_gitbacked_editcommit plugin
+     * @return  GitRepo
+     **/
+    public static function &cloneRemote(
+        $repo_path,
+        $remote,
+        $reference = null,
+        \action_plugin_gitbacked_editcommit $plugin = null
+    ) {
+        return GitRepo::createNew($repo_path, $plugin, $remote, true, $reference);
+    }
 
-	/**
-	 * Clones a remote repo into a directory and then returns a GitRepo object
-	 * for the newly created local repo
-	 *
-	 * Accepts a creation path and a remote to clone from
-	 *
-	 * @access  public
-	 * @param   string  repository path
-	 * @param   string  remote source
-	 * @param   string  reference path
-	 * @param   \action_plugin_gitbacked_editcommit plugin
-	 * @return  GitRepo
-	 **/
-	public static function &clone_remote($repo_path, $remote, $reference = null, \action_plugin_gitbacked_editcommit $plugin = null) {
-		return GitRepo::create_new($repo_path, $plugin, $remote, true, $reference);
-	}
-
-	/**
-	 * Checks if a variable is an instance of GitRepo
-	 *
-	 * Accepts a variable
-	 *
-	 * @access  public
-	 * @param   mixed   variable
-	 * @return  bool
-	 */
-	public static function is_repo($var) {
-		return ($var instanceof GitRepo);
-	}
-
+    /**
+     * Checks if a variable is an instance of GitRepo
+     *
+     * Accepts a variable
+     *
+     * @access  public
+     * @param   mixed   variable
+     * @return  bool
+     */
+    public static function isRepo($var)
+    {
+        return ($var instanceof GitRepo);
+    }
 }
 
 /* End of file */
