@@ -13,9 +13,9 @@ if (!defined('DOKU_LF')) define('DOKU_LF', "\n");
 if (!defined('DOKU_TAB')) define('DOKU_TAB', "\t");
 if (!defined('DOKU_PLUGIN')) define('DOKU_PLUGIN',DOKU_INC.'lib/plugins/');
 
-require_once dirname(__FILE__).'/../lib/Git.php';
-require_once dirname(__FILE__).'/../lib/GitRepo.php';
-require_once dirname(__FILE__).'/../lib/GitBackedUtil.php';
+require_once dirname(__FILE__).'/../classes/Git.php';
+require_once dirname(__FILE__).'/../classes/GitRepo.php';
+require_once dirname(__FILE__).'/../classes/GitBackedUtil.php';
 
 class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
 
