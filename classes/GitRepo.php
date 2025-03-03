@@ -21,12 +21,12 @@ class GitRepo
     public const REGEX_GIT_URL_FILTER_PWD = "/^(.*)((http:)|(https:))([^:]+)(:[^@]*)?(.*)/im";
     public const REGEX_GIT_URL_FILTER_PWD_REPLACE_PATTERN = "$1$2$5$7";
 
-    protected $repo_path = null;
+    protected $repo_path;
     protected $bare = false;
-    protected $envopts = array();
+    protected $envopts = [];
     // Fix for PHP <=7.3 compatibility: Type declarations for properties work since PHP >= 7.4 only.
     // protected ?\action_plugin_gitbacked_editcommit $plugin = null;
-    protected $plugin = null;
+    protected $plugin;
 
     /**
      * Create a new git repository
@@ -131,18 +131,16 @@ class GitRepo
                             $this->repo_path = $repo_path;
                             $this->bare = true;
                         }
-                    } else {
-                        if ($create_new) {
-                            $this->repo_path = $repo_path;
-                            if ($_init) {
-                                $this->run('init');
-                            }
-                        } else {
-                            throw new \Exception($this->handleRepoPathError(
-                                $repo_path,
-                                '"' . $repo_path . '" is not a git repository'
-                            ));
+                    } elseif ($create_new) {
+                        $this->repo_path = $repo_path;
+                        if ($_init) {
+                            $this->run('init');
                         }
+                    } else {
+                        throw new \Exception($this->handleRepoPathError(
+                            $repo_path,
+                            '"' . $repo_path . '" is not a git repository'
+                        ));
                     }
                 } else {
                     throw new \Exception($this->handleRepoPathError(
@@ -150,24 +148,22 @@ class GitRepo
                         '"' . $repo_path . '" is not a directory'
                     ));
                 }
-            } else {
-                if ($create_new) {
-                    if ($parent = realpath(dirname($repo_path))) {
-                        mkdir($repo_path);
-                        $this->repo_path = $repo_path;
-                        if ($_init) $this->run('init');
-                    } else {
-                        throw new \Exception($this->handleRepoPathError(
-                            $repo_path,
-                            'cannot create repository in non-existent directory'
-                        ));
-                    }
+            } elseif ($create_new) {
+                if ($parent = realpath(dirname($repo_path))) {
+                    mkdir($repo_path);
+                    $this->repo_path = $repo_path;
+                    if ($_init) $this->run('init');
                 } else {
                     throw new \Exception($this->handleRepoPathError(
                         $repo_path,
-                        '"' . $repo_path . '" does not exist'
+                        'cannot create repository in non-existent directory'
                     ));
                 }
+            } else {
+                throw new \Exception($this->handleRepoPathError(
+                    $repo_path,
+                    '"' . $repo_path . '" does not exist'
+                ));
             }
         }
     }
@@ -191,15 +187,12 @@ class GitRepo
      */
     public function testGit()
     {
-        $descriptorspec = array(
-            1 => array('pipe', 'w'),
-            2 => array('pipe', 'w'),
-        );
-        $pipes = array();
+        $descriptorspec = [1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
+        $pipes = [];
         $resource = proc_open(Git::getBin(), $descriptorspec, $pipes);
 
-        $stdout = stream_get_contents($pipes[1]);
-        $stderr = stream_get_contents($pipes[2]);
+        stream_get_contents($pipes[1]);
+        stream_get_contents($pipes[2]);
         foreach ($pipes as $pipe) {
             fclose($pipe);
         }
@@ -220,11 +213,8 @@ class GitRepo
     protected function runCommand($command)
     {
         //dbglog("Git->runCommand(command=[".$command."])");
-        $descriptorspec = array(
-            1 => array('pipe', 'w'),
-            2 => array('pipe', 'w'),
-        );
-        $pipes = array();
+        $descriptorspec = [1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
+        $pipes = [];
         $cwd = $this->repo_path;
         //dbglog("GitBacked - cwd: [".$cwd."]");
         /* Provide any $this->envopts via putenv

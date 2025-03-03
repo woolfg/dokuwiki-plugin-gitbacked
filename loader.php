@@ -11,9 +11,7 @@ spl_autoload_register(
      * @return void
      */
     function ($class) {
-        $namespaces = array(
-            'woolfg\\dokuwiki\\plugin\\gitbacked\\' => __DIR__ . '/classes/'
-        );
+        $namespaces = ['woolfg\\dokuwiki\\plugin\\gitbacked\\' => __DIR__ . '/classes/'];
 
         foreach ($namespaces as $prefix => $base_dir) {
             // does the class use the namespace prefix?
