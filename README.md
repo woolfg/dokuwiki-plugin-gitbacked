@@ -1,4 +1,6 @@
 # gitbacked Plugin for DokuWiki
+[![GNU General Public License v2.0](https://img.shields.io/github/license/woolfg/dokuwiki-plugin-gitbacked?label=License)](./LICENSE)
+[![CI](https://github.com/woolfg/dokuwiki-plugin-gitbacked/actions/workflows/dokuwiki.yml/badge.svg)](https://github.com/woolfg/dokuwiki-plugin-gitbacked/actions/workflows/dokuwiki.yml)
 
 ## :green_heart: Contributions welcome :green_heart:
 
@@ -18,7 +20,7 @@ All documentation for this plugin can be found at
 http://www.dokuwiki.org/plugin:gitbacked
 
 This plugin is provided as released DokuWiki installable ZIP packages with detailed [release notes](https://github.com/woolfg/dokuwiki-plugin-gitbacked/blob/master/CHANGELOG.md)
-via this repos [Releases](https://github.com/woolfg/dokuwiki-plugin-gitbacked/releases).  
+via this repos [Releases](https://github.com/woolfg/dokuwiki-plugin-gitbacked/releases).
 Detailed technical information on how releases are built can be found at [HowTo manage releases](https://github.com/woolfg/dokuwiki-plugin-gitbacked/blob/master/.github/workflows/docs/HowTo_MANAGE_RELEASES.md).
 
 If you install this plugin manually, make sure that:
