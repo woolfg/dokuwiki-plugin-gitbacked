@@ -1,7 +1,5 @@
 <?php
 
-use dokuwiki\Search\Indexer;
-
 /**
  * DokuWiki Plugin gitbacked (Action Component)
  *
@@ -22,6 +20,7 @@ require_once __DIR__ . '/../loader.php';
 use dokuwiki\Extension\ActionPlugin;
 use dokuwiki\Extension\EventHandler;
 use dokuwiki\Extension\Event;
+use dokuwiki\Search\Indexer;
 
 use woolfg\dokuwiki\plugin\gitbacked\Git;
 use woolfg\dokuwiki\plugin\gitbacked\GitRepo;
@@ -305,7 +304,11 @@ class action_plugin_gitbacked_editcommit extends ActionPlugin
      */
     public function notifyCreateNewError($repo_path, $reference, $error_message)
     {
-        $template_replacements = ['GIT_REPO_PATH' => $repo_path, 'GIT_REFERENCE' => (empty($reference) ? 'n/a' : $reference), 'GIT_ERROR_MESSAGE' => $error_message];
+        $template_replacements = [
+            'GIT_REPO_PATH' => $repo_path,
+            'GIT_REFERENCE' => (empty($reference) ? 'n/a' : $reference),
+            'GIT_ERROR_MESSAGE' => $error_message
+        ];
         return $this->notifyByMail('mail_create_new_error_subject', 'mail_create_new_error', $template_replacements);
     }
 
@@ -319,7 +322,10 @@ class action_plugin_gitbacked_editcommit extends ActionPlugin
      */
     public function notifyRepoPathError($repo_path, $error_message)
     {
-        $template_replacements = ['GIT_REPO_PATH' => $repo_path, 'GIT_ERROR_MESSAGE' => $error_message];
+        $template_replacements = [
+            'GIT_REPO_PATH' => $repo_path,
+            'GIT_ERROR_MESSAGE' => $error_message
+        ];
         return $this->notifyByMail('mail_repo_path_error_subject', 'mail_repo_path_error', $template_replacements);
     }
 
@@ -336,7 +342,13 @@ class action_plugin_gitbacked_editcommit extends ActionPlugin
      */
     public function notifyCommandError($repo_path, $cwd, $command, $status, $error_message)
     {
-        $template_replacements = ['GIT_REPO_PATH' => $repo_path, 'GIT_CWD' => $cwd, 'GIT_COMMAND' => $command, 'GIT_COMMAND_EXITCODE' => $status, 'GIT_ERROR_MESSAGE' => $error_message];
+        $template_replacements = [
+            'GIT_REPO_PATH' => $repo_path,
+            'GIT_CWD' => $cwd,
+            'GIT_COMMAND' => $command,
+            'GIT_COMMAND_EXITCODE' => $status,
+            'GIT_ERROR_MESSAGE' => $error_message
+        ];
         return $this->notifyByMail('mail_command_error_subject', 'mail_command_error', $template_replacements);
     }
 
@@ -354,7 +366,11 @@ class action_plugin_gitbacked_editcommit extends ActionPlugin
         if (!$this->getConf('notifyByMailOnSuccess')) {
             return false;
         }
-        $template_replacements = ['GIT_REPO_PATH' => $repo_path, 'GIT_CWD' => $cwd, 'GIT_COMMAND' => $command];
+        $template_replacements = [
+            'GIT_REPO_PATH' => $repo_path,
+            'GIT_CWD' => $cwd,
+            'GIT_COMMAND' => $command
+        ];
         return $this->notifyByMail('mail_command_success_subject', 'mail_command_success', $template_replacements);
     }
 
