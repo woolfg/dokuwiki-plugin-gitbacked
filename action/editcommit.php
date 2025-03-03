@@ -1,5 +1,7 @@
 <?php
 
+use dokuwiki\Search\Indexer;
+
 /**
  * DokuWiki Plugin gitbacked (Action Component)
  *
@@ -68,8 +70,8 @@ class action_plugin_gitbacked_editcommit extends ActionPlugin
         Git::setBin(empty($repoWorkDir) ? Git::getBin()
             : Git::getBin() . ' --work-tree ' . escapeshellarg($repoWorkDir));
         $params = str_replace(
-            array('%mail%', '%user%'),
-            array($this->getAuthorMail(), $this->getAuthor()),
+            ['%mail%', '%user%'],
+            [$this->getAuthorMail(), $this->getAuthor()],
             $this->getConf('addParams')
         );
         if ($params) {
@@ -131,7 +133,7 @@ class action_plugin_gitbacked_editcommit extends ActionPlugin
         global $conf;
         $repoPath = str_replace('\\', '/', realpath(GitBackedUtil::getEffectivePath($this->getConf('repoPath'))));
         $datadir = $conf['datadir']; // already normalized
-        if (!(substr($datadir, 0, strlen($repoPath)) === $repoPath)) {
+        if (substr($datadir, 0, strlen($repoPath)) !== $repoPath) {
             throw new Exception('Datadir not inside repoPath ??');
         }
         return substr($datadir, strlen($repoPath) + 1);
@@ -140,8 +142,8 @@ class action_plugin_gitbacked_editcommit extends ActionPlugin
     private function updatePage($page)
     {
 
-        if (is_callable('\\dokuwiki\\Search\\Indexer::getInstance')) {
-            $Indexer = \dokuwiki\Search\Indexer::getInstance();
+        if (is_callable(Indexer::class . '::getInstance')) {
+            $Indexer = Indexer::getInstance();
             $success = $Indexer->addPage($page, false, false);
         } elseif (class_exists('Doku_Indexer')) {
             $success = idx_addPage($page, false, false);
@@ -226,8 +228,8 @@ class action_plugin_gitbacked_editcommit extends ActionPlugin
         $mediaName = $event->data['name'];
 
         $message = str_replace(
-            array('%media%', '%user%'),
-            array($mediaName, $this->getAuthor()),
+            ['%media%', '%user%'],
+            [$mediaName, $this->getAuthor()],
             $this->getConf('commitMediaMsgDel')
         );
 
@@ -241,8 +243,8 @@ class action_plugin_gitbacked_editcommit extends ActionPlugin
         $mediaName = $event->data[2];
 
         $message = str_replace(
-            array('%media%', '%user%'),
-            array($mediaName, $this->getAuthor()),
+            ['%media%', '%user%'],
+            [$mediaName, $this->getAuthor()],
             $this->getConf('commitMediaMsg')
         );
 
@@ -282,8 +284,8 @@ class action_plugin_gitbacked_editcommit extends ActionPlugin
             }
 
             $message = str_replace(
-                array('%page%', '%summary%', '%user%'),
-                array($pageName, $editSummary, $this->getAuthor()),
+                ['%page%', '%summary%', '%user%'],
+                [$pageName, $editSummary, $this->getAuthor()],
                 $msgTemplate
             );
 
@@ -303,11 +305,7 @@ class action_plugin_gitbacked_editcommit extends ActionPlugin
      */
     public function notifyCreateNewError($repo_path, $reference, $error_message)
     {
-        $template_replacements = array(
-            'GIT_REPO_PATH' => $repo_path,
-            'GIT_REFERENCE' => (empty($reference) ? 'n/a' : $reference),
-            'GIT_ERROR_MESSAGE' => $error_message
-        );
+        $template_replacements = ['GIT_REPO_PATH' => $repo_path, 'GIT_REFERENCE' => (empty($reference) ? 'n/a' : $reference), 'GIT_ERROR_MESSAGE' => $error_message];
         return $this->notifyByMail('mail_create_new_error_subject', 'mail_create_new_error', $template_replacements);
     }
 
@@ -321,10 +319,7 @@ class action_plugin_gitbacked_editcommit extends ActionPlugin
      */
     public function notifyRepoPathError($repo_path, $error_message)
     {
-        $template_replacements = array(
-            'GIT_REPO_PATH' => $repo_path,
-            'GIT_ERROR_MESSAGE' => $error_message
-        );
+        $template_replacements = ['GIT_REPO_PATH' => $repo_path, 'GIT_ERROR_MESSAGE' => $error_message];
         return $this->notifyByMail('mail_repo_path_error_subject', 'mail_repo_path_error', $template_replacements);
     }
 
@@ -341,13 +336,7 @@ class action_plugin_gitbacked_editcommit extends ActionPlugin
      */
     public function notifyCommandError($repo_path, $cwd, $command, $status, $error_message)
     {
-        $template_replacements = array(
-            'GIT_REPO_PATH' => $repo_path,
-            'GIT_CWD' => $cwd,
-            'GIT_COMMAND' => $command,
-            'GIT_COMMAND_EXITCODE' => $status,
-            'GIT_ERROR_MESSAGE' => $error_message
-        );
+        $template_replacements = ['GIT_REPO_PATH' => $repo_path, 'GIT_CWD' => $cwd, 'GIT_COMMAND' => $command, 'GIT_COMMAND_EXITCODE' => $status, 'GIT_ERROR_MESSAGE' => $error_message];
         return $this->notifyByMail('mail_command_error_subject', 'mail_command_error', $template_replacements);
     }
 
@@ -365,11 +354,7 @@ class action_plugin_gitbacked_editcommit extends ActionPlugin
         if (!$this->getConf('notifyByMailOnSuccess')) {
             return false;
         }
-        $template_replacements = array(
-            'GIT_REPO_PATH' => $repo_path,
-            'GIT_CWD' => $cwd,
-            'GIT_COMMAND' => $command
-        );
+        $template_replacements = ['GIT_REPO_PATH' => $repo_path, 'GIT_CWD' => $cwd, 'GIT_COMMAND' => $command];
         return $this->notifyByMail('mail_command_success_subject', 'mail_command_success', $template_replacements);
     }
 
@@ -403,6 +388,7 @@ class action_plugin_gitbacked_editcommit extends ActionPlugin
         //dbglog("GitBacked - template html['".$template_id."']: ".$template_html);
         $mailer->subject($this->getLang($subject_id));
         $mailer->setBody($template_text, $template_replacements, null, $template_html);
+
         $ret = $mailer->send();
 
         return $ret;

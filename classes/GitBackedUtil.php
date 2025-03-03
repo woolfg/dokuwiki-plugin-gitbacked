@@ -137,19 +137,15 @@ class GitBackedUtil
      */
     public static function getClosestAbsoluteRepoPath($path)
     {
-        $descriptorspec = array(
-            1 => array('pipe', 'w'),
-            2 => array('pipe', 'w'),
-        );
-        $ret = '';
-        $pipes = array();
+        $descriptorspec = [1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
+        $pipes = [];
         // Using --git-dir rather than --absolute-git-dir for a wider git versions compatibility
         //$command = Git::getBin()." rev-parse --absolute-git-dir";
         $command = Git::getBin() . " rev-parse --git-dir";
         //dbglog("GitBacked - Command: ".$command);
         $resource = proc_open($command, $descriptorspec, $pipes, $path);
         $stdout = stream_get_contents($pipes[1]);
-        $stderr = stream_get_contents($pipes[2]);
+        stream_get_contents($pipes[2]);
         foreach ($pipes as $pipe) {
             fclose($pipe);
         }
