@@ -30,7 +30,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
      These links provide direct access to the GitHub compare vs. the previous release.
      The particular link of a released version will be copied to the release notes of a release accordingly.
      At the end of this file appropriate compare links have to be maintained for each release version in format:
- 
+
   +-current release version
   |
   |            +-URL to this repo               previous release version tag-+            +-current release version tag
@@ -63,6 +63,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 - TBD
+
+
+## [2025-03-03]
+
+### Added
+- Add code style config files
+- Add code style check
+- Add auto loader `loader.php`
+
+### Fixed
+- Replace references to deprecated classes by non deprecated classes
+- Update code to meet DokuWiki standard code style
+- Make use of plugin specific namespace for `classes/*.php` classes
 
 
 ## [2025-02-26]
@@ -173,7 +186,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - This is just a dummy placeholder to make the parser of GHCICD/release-notes-from-changelog@v1 happy!
 -->
 
-[Unreleased]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2025-02-26..HEAD
+[Unreleased]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2025-03-01..HEAD
+[2025-03-01]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2025-02-26..v2025-03-01
 [2025-02-26]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2023-05-07..v2025-02-26
 [2023-05-07]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2023-03-07..v2023-05-07
 [2023-03-07]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2022-02-06..v2023-03-07

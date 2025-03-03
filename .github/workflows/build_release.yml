@@ -14,7 +14,7 @@
 name: Build a release
 
 on:
-  # Triggers the workflow on push of a tag filtering the tag to meet 
+  # Triggers the workflow on push of a tag filtering the tag to meet
   # semantic version numbering according to https://semver.org
   # Here we use the DokuWiki conform version number pattern.
   push:
@@ -48,8 +48,8 @@ jobs:
       APP_INFO_FILE: plugin.info.txt
       APP_INFO_FILE_VERSION_KEY: date
       BUILD_DIR: build
-      ZIP_EXCLUSIONS: '*.git* .editorconfig /*.github/* /*build/* RELEASE_HEAD.md'
-    
+      ZIP_EXCLUSIONS: '*.git* .editorconfig /*.github/* /*.vscode/* /*build/* /*_test/* RELEASE_HEAD.md'
+
     steps:
       # Log use case if triggered manually
       - name: Log use case if triggered manually
@@ -170,7 +170,7 @@ jobs:
         with:
           version: ${{ env.RELEASE_VERSION }}
           working-directory: ${{ env.BUILD_DIR }}
- 
+
       - name: Log RELEASE.md
         run: |
           echo ">>>>> build/RELEASE.md:"
