@@ -14,6 +14,7 @@ if (!defined('DOKU_TAB')) define('DOKU_TAB', "\t");
 if (!defined('DOKU_PLUGIN')) define('DOKU_PLUGIN',DOKU_INC.'lib/plugins/');
 
 require_once dirname(__FILE__).'/../lib/Git.php';
+require_once dirname(__FILE__).'/../lib/GitRepo.php';
 require_once dirname(__FILE__).'/../lib/GitBackedUtil.php';
 
 class action_plugin_gitbacked_editcommit extends DokuWiki_Action_Plugin {
