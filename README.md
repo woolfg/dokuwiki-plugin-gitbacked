@@ -1,5 +1,5 @@
 # gitbacked Plugin for DokuWiki
-[![GNU General Public License v2.0](https://img.shields.io/github/license/woolfg/dokuwiki-plugin-gitbacked?label=License)](./LICENSE)
+[![GNU General Public License v2.0](https://img.shields.io/github/license/woolfg/dokuwiki-plugin-gitbacked?style=flat&label=License)](./LICENSE)
 [![CI](https://github.com/woolfg/dokuwiki-plugin-gitbacked/actions/workflows/dokuwiki.yml/badge.svg)](https://github.com/woolfg/dokuwiki-plugin-gitbacked/actions/workflows/dokuwiki.yml)
 
 ## :green_heart: Contributions welcome :green_heart:
