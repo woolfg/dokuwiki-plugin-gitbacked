@@ -88,7 +88,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Make use of plugin specific namespace for `classes/*.php` classes
 
 ### ❤️ Thanks
-Many thanks for collaboration on this release for: @ribsey
+Many thanks for collaboration on this release for: @ribsey, @mhoffrog
 
 
 ## [2025-02-26]
