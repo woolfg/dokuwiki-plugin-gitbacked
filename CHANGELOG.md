@@ -10,16 +10,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- The subsequent comment lines start with a space - not to irritate the release scripts parser!
  ## [yyyy-mm-dd]
  <empty line> - optional sub sections may follow like:
- ### Added:
- - This feature was added
- <empty line>
- ### Changed:
+ ### 💥 Breaking Change(s):
  - This feature was changed
  <empty line>
- ### Removed:
+ ### 🚀 Added:
+ - This feature was added
+ <empty line>
+ ### 👷 Changed:
+ - This feature was changed
+ <empty line>
+ ### 👻 Removed:
  - This feature was removed
  <empty line>
- ### Fixed:
+ ### 🐛 Fixed:
  - This issue was fixed
  <empty line>
  <empty line> - next line is the starting of the previous release
@@ -40,75 +43,94 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!--
 ## [Unreleased]
 
-### Added
+### 💥 Breaking Change
 - TBD
 
-### Changed
+### 🚀 Added
 - TBD
 
-### Deprecated
+### 👷 Changed
 - TBD
 
-###	Removed
+### ⚠️ Deprecated
 - TBD
 
-### Fixed
+###	👻 Removed
 - TBD
 
-###	Security
+### 🐛 Fixed
+- TBD
+
+###	🛡️ Security
+- TBD
+
+### 📝 Documentation
 - TBD
 -->
 
 ## [Unreleased]
 
-### Changed
+### 👷 Changed
 - TBD
 
 
-## [2025-03-03]
+## [2025-11-11]
 
-### Added
+### 🚀 Added
 - Add code style config files
 - Add code style check
 - Add auto loader `loader.php`
 
-### Fixed
+### 🐛 Fixed
+- Fix warnings on periodic pulls as no user is logged in -  PR [#100]
 - Replace references to deprecated classes by non deprecated classes
 - Update code to meet DokuWiki standard code style
 - Make use of plugin specific namespace for `classes/*.php` classes
 
+### ❤️ Thanks
+Many thanks for collaboration on this release for: @ribsey
+
 
 ## [2025-02-26]
 
-### Added
+### 🚀 Added
 - Add config `'updateIndexOnPull'` - PR [#93], [#94]
 
-### Changed
+### 👷 Changed
 - Avoid using $_ENV in `lib/Git.php#run_command` - PR [#91]
   - ensuring more controlled and secure handling of environment variables
   - fixes probable warning 'Array to string conversion'
 
+### ❤️ Thanks
+Many thanks for collaboration on this release for: @msx80, @delphij
+
 
 ## [2023-05-07]
 
-### Fixed
+### 🐛 Fixed
 - Deprecation warnings raised on `action/editcommit.php` - fixes [#86]
+
+### ❤️ Thanks
+Many thanks for collaboration on this release for: @mhoffrog
 
 
 ## [2023-03-07]
 
-### Changed
+### 👷 Changed
 - Allow absolute path in `'repoPath'` and/or `'repoWorkDir'` - implements [#80]
 - `'repoWorkDir'` is configured empty by default now
 - `--work-tree` option is ommited, if `'repoWorkDir'` is empty - addressing [#79]
 
-### Fixed
+### 🐛 Fixed
 - Cyrillic commit messages not being corrupted anymore - fixes [#82]
+
+### ❤️ Thanks
+Many thanks for collaboration on this release for: @sjv0, @zlobniyshurik
 
 
 ## [2022-02-06]
 
-### Changed
+### 👷 Changed
 - Created LICENSE file and removed corresponding text from the README.md - implements [#67]
 - Use DokuWiki's user name & email address as commit author - implements [#63], [#66]
   - Updated default setting for `$conf['addParams']` to apply DokuWiki user name as commit author and DokuWiki user eMail as eMail.
@@ -117,19 +139,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   - Added a link to the referred COPYING license file originally hosted on the DokuWiki master branch to simplify a probable lookup.
   - Issues linked on startpage, motivate people to contribute
 
-### Fixed
+### 🐛 Fixed
 - Allow empty commits - fixes [#39]
+
+### ❤️ Thanks
+Many thanks for collaboration on this release for: @SECtim, @ochurlaud
 
 
 ## [2022-01-20]
 
-### Fixed
+### 🐛 Fixed
 - Fix for compatibility to PHP versions <7.4 - was introduced by previous release - fixes [#69]
 
 
 ## [2021-03-19]
 
-### Added
+### 🚀 Added
 - Extended to send error messages to a configurable eMail address - implements [#53]
 - Added config `'emailAddressOnError'`
 - Added config `'notifyByMailOnSuccess'`
@@ -140,22 +165,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [2016-08-14]
 
-### Changed
+### 👷 Changed
 - Updated last change date to current date - fix [#38]
 
-### Fixed
+### 🐛 Fixed
 - Adjusted method signatures to match parent in action/editcommit.php
 - Corrected method signature for php7-compatibility in action/editcommit.php
 
 
 ## [2015-10-03]
 
-### Added
+### 🚀 Added
 - Allow name and mail user variables in addParams.
 - Add an option for customizing git working tree
 - Added setting ignorePaths to ignore specified paths in add/commit-process
 
-### Changed
+### 👷 Changed
 - Use Markdown for the GitHub README.
 - Update plugin date and URL, added Carsten Teibes as author
 - Pull latest git php library (0.1.4)
@@ -163,7 +188,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Use relative path for Git.php and `$conf['tempdir']` for temp file.
 - Coding compliance change: move handle_periodic_pull down, together with other "handle"s.
 
-### Fixed
+### 🐛 Fixed
 - Fix passing additional arguments to git binary
 - Fix lang typos.
 - Coding compliance change, tabs to spaces, fix typos.
@@ -172,10 +197,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [2012-10-31]
 
-### Added
+### 🚀 Added
 - Initial release
 
-### Comments
+### 📝 Comments
 - The release name complies with the date property of plugin.info.txt
 - The recent commit within this release is [2dbc1a5](https://github.com/woolfg/dokuwiki-plugin-gitbacked/commit/2dbc1a5564516b801dbda239b68152edb5be0303) of 13-Nov-2012
 
@@ -186,8 +211,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - This is just a dummy placeholder to make the parser of GHCICD/release-notes-from-changelog@v1 happy!
 -->
 
-[Unreleased]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2025-03-01..HEAD
-[2025-03-01]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2025-02-26..v2025-03-01
+[Unreleased]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2025-11-11..HEAD
+[2025-11-11]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2025-02-26..v2025-11-11
 [2025-02-26]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2023-05-07..v2025-02-26
 [2023-05-07]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2023-03-07..v2023-05-07
 [2023-03-07]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2022-02-06..v2023-03-07
