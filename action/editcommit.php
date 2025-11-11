@@ -117,18 +117,18 @@ class action_plugin_gitbacked_editcommit extends ActionPlugin
         }
     }
 
-    private function getUserInfo($key) {
-        if (isset($GLOBALS['USERINFO'][$key])) {
-            return $GLOBALS['USERINFO'][$key];
-        }
-        return '';
+    private function getUserInfo($key)
+    {
+        return $GLOBALS['USERINFO'][$key] ?? '';
     }
-    
-    private function getAuthor() {
+
+    private function getAuthor()
+    {
         return $this->getUserInfo('name');
     }
-    
-    private function getAuthorMail() {
+
+    private function getAuthorMail()
+    {
         return $this->getUserInfo('mail');
     }
 
