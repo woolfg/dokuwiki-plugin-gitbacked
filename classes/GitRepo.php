@@ -142,7 +142,8 @@ class GitRepo
                         }
                     } elseif (!$_init) {
                         // If we do not have to init the repo, we just reflect that there is no repo path yet.
-                        // This may be the case for auto determining repos, if there is no repo related to the current resource going to be commited.
+                        // This may be the case for auto determining repos,
+                        // if there is no repo related to the current resource going to be commited.
                         $this->repo_path = '';
                     } else {
                         throw new \Exception($this->handleRepoPathError(
@@ -178,7 +179,7 @@ class GitRepo
 
     /**
      * Get the path to the repo directory
-     * 
+     *
      * @access public
      * @return string
      */
@@ -224,7 +225,8 @@ class GitRepo
      * Determine closest parent git repository for a given path as absolute PHP realpath().
      *
      * @access  public
-     * @return  string  the next parent git repo root dir as absolute PHP realpath() or empty string, if no parent repo found
+     * @return  string  the next parent git repo root dir as absolute PHP realpath()
+     *                  or empty string, if no parent repo found.
      */
     public function absoluteGitDir($path)
     {
@@ -273,7 +275,10 @@ class GitRepo
     {
         //dbglog("Git->run_command: repo_path=[" . $this->repo_path . "])");
         if (empty($this->repo_path)) {
-            throw new Exception($this->handleRepoPathError($this->repo_path, "Failure on GitRepo->runCommand(): Git command must not be run for an empty repo path"));
+            throw new \Exception($this->handleRepoPathError(
+                $this->repo_path,
+                "Failure on GitRepo->runCommand(): Git command must not be run for an empty repo path"
+            ));
         }
         //dbglog("Git->runCommand(command=[".$command."])");
         $descriptorspec = [1 => ['pipe', 'w'], 2 => ['pipe', 'w']];

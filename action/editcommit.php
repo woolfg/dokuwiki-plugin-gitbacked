@@ -59,9 +59,10 @@ class action_plugin_gitbacked_editcommit extends ActionPlugin
      * @param   string  path to the file or directory to be commited (required for auto determination only)
      * @return  GitRepo instance or null if there is no repo related to fileOrDirPath
      */
-    private function initRepo($fileOrDirPath="") {
+    private function initRepo($fileOrDirPath = "")
+    {
         global $conf;
-        
+
         //set the path to the git binary
         $gitPath = trim($this->getConf('gitPath'));
         if ($gitPath !== '') {
@@ -89,7 +90,9 @@ class action_plugin_gitbacked_editcommit extends ActionPlugin
             }
             // Validate that the git repoPath found is within or below the DokuWiki 'savedir' configured:
             if (strpos(realpath($repoPath), realpath($conf['savedir'])) === false) {
-                //dbglog("GitBacked - WARNING: repoPath=" . $repoPath . " is above the configured savedir=" . realpath($conf['savedir'])." => this git repo will be ignored!");
+                //dbglog("GitBacked - WARNING: repoPath=" . $repoPath . " is above the configured savedir="
+                //    . realpath($conf['savedir']) . " => this git repo will be ignored!"
+                //);
                 return null;
             }
             $repoWorkDir = '';
@@ -99,7 +102,10 @@ class action_plugin_gitbacked_editcommit extends ActionPlugin
                 // the repoPath configured.
                 if (realpath($configuredRepoPath) === realpath($repoPath)) {
                     $repoWorkDir = $configuredRepoWorkDir;
-                    //dbglog("GitBacked - INFO: repoPath=" . $repoPath . " is the one explicitly configured => we use the configured workDir=[" . $repoWorkDir . "]");
+                    //dbglog("GitBacked - INFO: repoPath=" . $repoPath
+                    //    . " is the one explicitly configured => we use the configured workDir=["
+                    //    . $repoWorkDir . "]"
+                    //);
                 }
             }
             //dbglog("GitBacked - AUTO_DETERMINE_USE_CASE: repoPath=" . $repoPath);
@@ -117,7 +123,7 @@ class action_plugin_gitbacked_editcommit extends ActionPlugin
         }
 
         Git::setBin(empty($repoWorkDir) ? Git::getBin()
-            : Git::getBin().' --work-tree ' . escapeshellarg($repoWorkDir));
+            : Git::getBin() . ' --work-tree ' . escapeshellarg($repoWorkDir));
 
         $params = str_replace(
             ['%mail%', '%user%'],
