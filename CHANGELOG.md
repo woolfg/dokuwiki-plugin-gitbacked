@@ -74,6 +74,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - TBD
 
 
+## [2026-02-21]
+
+### 🚀 Added
+- Additional placeholders in commit message template - PR [#103]
+
+### 👷 Changed
+- Centralize `%user%`, `%mail%` and `\n` replacement:
+  - moved within `action/editcommit.php` to `commitFile(...)` - PR [#103]
+
+### ❤️ Thanks
+Many thanks for collaboration on this release for: @dotsam
+
+
 ## [2025-11-11]
 
 ### 🚀 Added
@@ -211,7 +224,8 @@ Many thanks for collaboration on this release for: @SECtim, @ochurlaud
 - This is just a dummy placeholder to make the parser of GHCICD/release-notes-from-changelog@v1 happy!
 -->
 
-[Unreleased]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2025-11-11..HEAD
+[Unreleased]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2026-02-21..HEAD
+[2026-02-21]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2025-11-11..v2026-02-21
 [2025-11-11]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2025-02-26..v2025-11-11
 [2025-02-26]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2023-05-07..v2025-02-26
 [2023-05-07]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2023-03-07..v2023-05-07
