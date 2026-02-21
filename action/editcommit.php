@@ -97,6 +97,12 @@ class action_plugin_gitbacked_editcommit extends ActionPlugin
     private function commitFile($filePath, $message)
     {
         if (!$this->isIgnored($filePath)) {
+            $message = str_replace(
+                ['%user%', '%mail%', '\n'],
+                [$this->getAuthor(), $this->getAuthorMail(), "\n"],
+                $message
+            );
+
             try {
                 $repo = $this->initRepo();
 
@@ -232,8 +238,8 @@ class action_plugin_gitbacked_editcommit extends ActionPlugin
         $mediaName = $event->data['name'];
 
         $message = str_replace(
-            ['%media%', '%user%'],
-            [$mediaName, $this->getAuthor()],
+            ['%media%'],
+            [$mediaName],
             $this->getConf('commitMediaMsgDel')
         );
 
@@ -247,8 +253,8 @@ class action_plugin_gitbacked_editcommit extends ActionPlugin
         $mediaName = $event->data[2];
 
         $message = str_replace(
-            ['%media%', '%user%'],
-            [$mediaName, $this->getAuthor()],
+            ['%media%'],
+            [$mediaName],
             $this->getConf('commitMediaMsg')
         );
 
@@ -267,6 +273,7 @@ class action_plugin_gitbacked_editcommit extends ActionPlugin
         if (!$rev) {
             $pagePath = $event->data[0][0];
             $pageName = $event->data[2];
+            $pageNs = $event->data[1];
             $pageContent = $event->data[0][1];
 
             // get the summary directly from the form input
@@ -288,8 +295,8 @@ class action_plugin_gitbacked_editcommit extends ActionPlugin
             }
 
             $message = str_replace(
-                ['%page%', '%summary%', '%user%'],
-                [$pageName, $editSummary, $this->getAuthor()],
+                ['%page%', '%summary%', '%ns%'],
+                [$pageName, $editSummary, $pageNs],
                 $msgTemplate
             );
 
