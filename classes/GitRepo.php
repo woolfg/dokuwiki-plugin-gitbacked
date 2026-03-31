@@ -89,7 +89,6 @@ class GitRepo
      * @param   string  repository path
      * @param   \action_plugin_gitbacked_editcommit plugin
      * @param   bool    create if not exists?
-     * @return  void
      */
     public function __construct(
         $repo_path = null,
@@ -228,7 +227,7 @@ class GitRepo
         foreach ($this->envopts as $k => $v) {
             putenv(sprintf("%s=%s", $k, $v));
         }
-        $resource = proc_open($command, $descriptorspec, $pipes, $cwd, null);
+        $resource = proc_open($command, $descriptorspec, $pipes, $cwd);
 
         $stdout = stream_get_contents($pipes[1]);
         $stderr = stream_get_contents($pipes[2]);
