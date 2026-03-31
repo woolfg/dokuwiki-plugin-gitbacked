@@ -182,6 +182,9 @@ class action_plugin_gitbacked_editcommit extends ActionPlugin
 
             //if it is time to run a pull request
             if ($lastPull + $timeToWait < $now) {
+                // Throttle by last attempt, not just last success, to avoid retrying
+                // on every HTTP request while the remote is unavailable.
+                file_put_contents($lastPullFile, serialize($now));
                 try {
                     $repo = $this->initRepo();
                     if ($enableIndexUpdate) {
@@ -225,9 +228,6 @@ class action_plugin_gitbacked_editcommit extends ActionPlugin
                     }
                     return;
                 }
-
-                //save the current time to the file to track the last pull execution
-                file_put_contents($lastPullFile, serialize(time()));
             }
         }
     }
