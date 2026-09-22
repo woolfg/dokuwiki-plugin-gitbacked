@@ -73,6 +73,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### 👷 Changed
 - TBD
 
+### 🐛 Fixed
+- Fix index update on periodic pull with DokuWiki 2025-05-14 "Librarian" and
+  newer: the `Doku_Indexer` class no longer exists, so no page was reindexed - PR [#107]
+
 
 ## [2026-02-21]
 
@@ -236,6 +240,7 @@ Many thanks for collaboration on this release for: @SECtim, @ochurlaud
 [2016-08-14]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2015-10-03..v2016-08-14
 [2015-10-03]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2012-10-31..v2015-10-03
 [2012-10-31]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/releases/tag/v2012-10-31
+[#107]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/pull/107
 [#94]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/pull/94
 [#93]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/pull/93
 [#91]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/pull/91

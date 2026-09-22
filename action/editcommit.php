@@ -20,6 +20,7 @@ require_once __DIR__ . '/../loader.php';
 use dokuwiki\Extension\ActionPlugin;
 use dokuwiki\Extension\EventHandler;
 use dokuwiki\Extension\Event;
+use dokuwiki\Search\Exception\SearchException;
 use dokuwiki\Search\Indexer;
 
 use woolfg\dokuwiki\plugin\gitbacked\Git;
@@ -152,10 +153,14 @@ class action_plugin_gitbacked_editcommit extends ActionPlugin
     private function updatePage($page)
     {
 
-        if (is_callable(Indexer::class . '::getInstance')) {
-            $Indexer = Indexer::getInstance();
-            $success = $Indexer->addPage($page, false, false);
-        } elseif (class_exists('Doku_Indexer')) {
+        if (method_exists(Indexer::class, 'addPage')) {
+            // Newer DokuWiki: the indexer reports failures as exceptions
+            try {
+                $success = (new Indexer())->addPage($page, false);
+            } catch (SearchException $e) {
+                $success = $e->getMessage();
+            }
+        } elseif (function_exists('idx_addPage')) {
             $success = idx_addPage($page, false, false);
         } else {
             // Failed to index the page. Your DokuWiki is older than release 2011-05-25 "Rincewind"
