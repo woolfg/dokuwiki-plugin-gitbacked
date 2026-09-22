@@ -73,9 +73,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### 👷 Changed
 - TBD
 
+
+## [2026-09-22]
+
+### 👷 Changed
+- Do not spam git pull if something goes wrong - PR [#104]
+
 ### 🐛 Fixed
-- Fix index update on periodic pull with DokuWiki 2025-05-14 "Librarian" and
-  newer: the `Doku_Indexer` class no longer exists, so no page was reindexed - PR [#107]
+- Fix index update on periodic pull with DokuWiki 2025-05-14 "Librarian" and newer:<br>
+  The `Doku_Indexer` class no longer exists, so no page was reindexed - PR [#107]
+
+### ❤️ Thanks
+Many thanks for collaboration on this release for: @SqrtMinusOne, @mattst88
 
 
 ## [2026-02-21]
@@ -228,7 +237,8 @@ Many thanks for collaboration on this release for: @SECtim, @ochurlaud
 - This is just a dummy placeholder to make the parser of GHCICD/release-notes-from-changelog@v1 happy!
 -->
 
-[Unreleased]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2026-02-21..HEAD
+[Unreleased]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2026-09-22..HEAD
+[2026-09-22]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2026-02-21..v2026-09-22
 [2026-02-21]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2025-11-11..v2026-02-21
 [2025-11-11]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2025-02-26..v2025-11-11
 [2025-02-26]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2023-05-07..v2025-02-26
@@ -241,6 +251,7 @@ Many thanks for collaboration on this release for: @SECtim, @ochurlaud
 [2015-10-03]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2012-10-31..v2015-10-03
 [2012-10-31]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/releases/tag/v2012-10-31
 [#107]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/pull/107
+[#104]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/pull/104
 [#94]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/pull/94
 [#93]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/pull/93
 [#91]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/pull/91
