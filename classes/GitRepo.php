@@ -54,30 +54,30 @@ class GitRepo
                 '"' . $repo_path . '" is already a git repository',
                 $plugin
             ));
-        } else {
-            $repo = new self($repo_path, $plugin, true, false);
-            if (is_string($source)) {
-                if ($remote_source) {
-                    if (!is_dir($reference) || !is_dir($reference . '/.git')) {
-                        throw new \Exception(self::handleCreateNewError(
-                            $repo_path,
-                            $reference,
-                            '"' . $reference . '" is not a git repository. Cannot use as reference.',
-                            $plugin
-                        ));
-                    } elseif (strlen($reference)) {
-                        $reference = realpath($reference);
-                        $reference = "--reference $reference";
-                    }
-                    $repo->cloneRemote($source, $reference);
-                } else {
-                    $repo->cloneFrom($source);
-                }
-            } else {
-                $repo->run('init');
-            }
-            return $repo;
         }
+        $repo = new self($repo_path, $plugin, true, false);
+        if (is_string($source)) {
+            if ($remote_source) {
+                if (!is_dir($reference) || !is_dir($reference . '/.git')) {
+                    throw new \Exception(self::handleCreateNewError(
+                        $repo_path,
+                        $reference,
+                        '"' . $reference . '" is not a git repository. Cannot use as reference.',
+                        $plugin
+                    ));
+                }
+                if (strlen($reference)) {
+                    $reference = realpath($reference);
+                    $reference = "--reference $reference";
+                }
+                $repo->cloneRemote($source, $reference);
+            } else {
+                $repo->cloneFrom($source);
+            }
+        } else {
+            $repo->run('init');
+        }
+        return $repo;
     }
 
     /**
@@ -253,9 +253,8 @@ class GitRepo
                 $status,
                 $error_message
             ));
-        } else {
-            $this->handleCommandSuccess($this->repo_path, $cwd, $command);
         }
+        $this->handleCommandSuccess($this->repo_path, $cwd, $command);
 
         return $stdout;
     }
@@ -354,7 +353,7 @@ class GitRepo
     {
         $msg = $this->run("status");
         if ($html == true) {
-            $msg = str_replace("\n", "<br />", $msg);
+            return str_replace("\n", "<br />", $msg);
         }
         return $msg;
     }
@@ -540,7 +539,7 @@ class GitRepo
         $branchArray = explode("\n", $this->run("branch -r"));
         foreach ($branchArray as $i => &$branch) {
             $branch = trim($branch);
-            if ($branch == "" || strpos($branch, 'HEAD -> ') !== false) {
+            if ($branch == "" || str_contains($branch, 'HEAD -> ')) {
                 unset($branchArray[$i]);
             }
         }
@@ -561,9 +560,8 @@ class GitRepo
         reset($activeBranch);
         if ($keep_asterisk) {
             return current($activeBranch);
-        } else {
-            return str_replace("* ", "", current($activeBranch));
         }
+        return str_replace("* ", "", current($activeBranch));
     }
 
     /**
@@ -689,9 +687,8 @@ class GitRepo
     {
         if ($format === null) {
             return $this->run('log');
-        } else {
-            return $this->run('log --pretty=format:"' . $format . '"');
         }
+        return $this->run('log --pretty=format:"' . $format . '"');
     }
 
     /**
