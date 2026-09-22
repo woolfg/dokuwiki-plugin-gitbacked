@@ -65,7 +65,7 @@ jobs:
 
       # Check out this repo
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v7
 
       # Set version tags as global environment properties
       - name: Prepare Version Tags
