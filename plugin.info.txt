@@ -5,3 +5,4 @@ date   2026-09-22
 name   gitbacked plugin
 desc   Pages and Media are stored in Git
 url    https://github.com/woolfg/dokuwiki-plugin-gitbacked
+phpmin 8.0
