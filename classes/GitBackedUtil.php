@@ -82,11 +82,9 @@ class GitBackedUtil
             return $ret;
         }
         if (defined('DOKU_FARM')) {
-            $ret = DOKU_CONF . '../' . $ret;
-        } else {
-            $ret = DOKU_INC . $ret;
+            return DOKU_CONF . '../' . $ret;
         }
-        return $ret;
+        return DOKU_INC . $ret;
     }
 
     /**

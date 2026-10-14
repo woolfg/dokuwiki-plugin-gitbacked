@@ -144,7 +144,7 @@ class action_plugin_gitbacked_editcommit extends ActionPlugin
         global $conf;
         $repoPath = str_replace('\\', '/', realpath(GitBackedUtil::getEffectivePath($this->getConf('repoPath'))));
         $datadir = $conf['datadir']; // already normalized
-        if (substr($datadir, 0, strlen($repoPath)) !== $repoPath) {
+        if (!str_starts_with($datadir, $repoPath)) {
             throw new Exception('Datadir not inside repoPath ??');
         }
         return substr($datadir, strlen($repoPath) + 1);
@@ -213,7 +213,7 @@ class action_plugin_gitbacked_editcommit extends ActionPlugin
 
                             foreach ($changedFiles as $cf) {
                                 // check if the file is inside localPath, that is, it's a page
-                                if (substr($cf, 0, strlen($localPath)) === $localPath) {
+                                if (str_starts_with($cf, $localPath)) {
                                     // convert from relative filename to page name
                                     // for example: local/path/dir/subdir/test.txt -> dir:subdir:test
                                     // -4 removes .txt
