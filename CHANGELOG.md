@@ -74,6 +74,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - TBD
 
 
+## [2026-10-14]
+
+### 💥 Breaking Change
+- PHP 8.0 is required as a minimum:<br>
+  Automatic code style fixes - PR[#106]
+
+
 ## [2026-09-22]
 
 ### 👷 Changed
@@ -237,7 +244,8 @@ Many thanks for collaboration on this release for: @SECtim, @ochurlaud
 - This is just a dummy placeholder to make the parser of GHCICD/release-notes-from-changelog@v1 happy!
 -->
 
-[Unreleased]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2026-09-22..HEAD
+[Unreleased]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2026-10-14..HEAD
+[2026-10-14]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2026-09-22..v2026-10-14
 [2026-09-22]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2026-02-21..v2026-09-22
 [2026-02-21]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2025-11-11..v2026-02-21
 [2025-11-11]: https://github.com/woolfg/dokuwiki-plugin-gitbacked/compare/v2025-02-26..v2025-11-11
